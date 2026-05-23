@@ -1,23 +1,54 @@
 # kindmd
 
-> An editorial markdown reader. Any markdown file becomes a thoughtfully designed editorial page via a fixed set of deterministic rules.
+> An editorial markdown reader (and Excel-like CSV viewer) for macOS. Markdown becomes a thoughtfully designed editorial page; CSV becomes a sortable, filterable spreadsheet — both via a fixed set of deterministic rules.
 
-## Run as a native Mac app
+## Install as a Mac app
 
 ```bash
 npm install
+npm run dist          # build the .app bundle
+npm run install-app   # copy to /Applications, sign, register as default handler
+```
+
+`install-app` registers kindmd as the default opener for `.md`, `.markdown`, `.mdown`, `.mkd`, `.csv`, and `.tsv`. Double-click any of those files in Finder and they open here.
+
+For day-to-day dev (no install required):
+
+```bash
 npm run app
 ```
 
-Opens a native window with a Finder-style sidebar (folders + files), a translucent vibrancy panel, and a native menu bar. Click any `.md` file in the sidebar to render it. Non-markdown files are listed for context but disabled.
+### Markdown mode
+
+- Three-pane reader: Finder-style sidebar · article · table of contents
+- **Edit mode** (`⌘E` or the Edit pill) — markdown source with the same paper palette
+- Inline color swatches for `#hex`, `rgb()`, `hsl()`, `oklch()`, etc.
+- Numbered, collapsible H2 sections with a labelled `Collapse` / `Expand` control
+- File watcher refreshes the article on disk save (preserves scroll)
+- Double-click a file in the sidebar to rename it inline
+- Right-click a folder → **Open in Claude Code** (launches Terminal + `claude`)
+
+### CSV / TSV mode
+
+- Excel-like grid with Excel column letters above the headers (`A`, `B`, `C`, …)
+- Sticky frozen first row (header) and bold sticky first column
+- Per-column **sort** (toggle asc / desc / none) and **filter** (checkbox list with search, counts, Select all / Clear)
+- Filtered columns are visually distinct across letter row, header, and body cells
+- **Copy table** (TSV) — also available on markdown tables
+- **Columns ▾** dropdown in the toolbar — show / hide any column
+- The global search box acts as a row filter across visible columns
+
+### Keyboard shortcuts
 
 - `⌘O` — Open Folder…
 - `⌘⇧O` — Open File…
-- `⌘F` — Find in document
+- `⌘F` / `⌘K` — Focus search (markdown: highlight matches · CSV: filter rows)
+- `⌘E` — Toggle edit mode (markdown only)
+- `⌘S` — Save (edit mode)
 - `⌘\` — Toggle sidebar
 - `⌘⇧T` — Toggle TOC pane
 - `⌘R` — Reveal current file in Finder
-- File watcher updates the document on save, preserving scroll & task state.
+- `Esc` — Close popovers / exit edit mode / clear search
 
 ## Run as a CLI / browser reader
 
@@ -37,11 +68,12 @@ kindmd --help                   # print usage
 
 - Warm cream paper, oxblood accents, mono eyebrows
 - Numbered H2 sections with rule separators
-- Auto-built TOC with active-section tracking
-- Live search (⌘K) with gold highlighting
-- Native checkbox task lists with persistence
-- Progress ring tracking task completion
+- Auto-built TOC with active-section tracking (works in edit mode too)
+- Live search with gold highlighting (markdown) or row filtering (CSV)
+- GFM task lists rendered as bullets (kindmd never modifies the source)
+- Inline color swatches next to recognised color literals
 - Collapsible H2 sections
+- Excel-like CSV viewer (sort, filter, freeze, copy-as-TSV)
 - Self-contained HTML export
 - WCAG 2.1 AA accessible
 - Zero external network requests
