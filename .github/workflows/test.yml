@@ -1,0 +1,35 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel an in-flight run on the same ref when a new commit is pushed —
+# saves CI minutes when you push fixups quickly.
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: smoke tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # Electron's postinstall downloads ~80MB of binaries we don't need on
+      # the test runner (the smoke tests are pure-Node). Skipping the download
+      # makes `npm ci` finish in seconds instead of a minute.
+      - name: Install dependencies
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+        run: npm ci --no-audit --no-fund
+
+      - name: Run smoke tests
+        run: npm test

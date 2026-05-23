@@ -1,0 +1,39 @@
+name: Feature request
+description: Suggest something for kindmd
+labels: [enhancement]
+title: "feat: "
+
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the pain first — don't lead with the solution.
+      placeholder: |
+        When I open a 5,000-row CSV, scrolling sideways feels sluggish
+        because every column re-renders on every scroll tick.
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: What's your idea?
+      description: How would the change look or behave? Optional — sometimes the problem is enough to start a discussion.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Have you considered alternatives?
+      description: Any workarounds you tried, or other tools that solve this?
+
+  - type: textarea
+    id: fit
+    attributes:
+      label: Does it fit the kindmd philosophy?
+      description: |
+        kindmd is deterministic, opinionated, and stays small. We say no to:
+        AI / LLM calls, web fonts, theming, configuration, and telemetry.
+        How does your idea fit those constraints?
+    validations:
+      required: true

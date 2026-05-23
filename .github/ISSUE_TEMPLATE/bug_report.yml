@@ -1,0 +1,58 @@
+name: Bug report
+description: Something in kindmd isn't working as expected
+labels: [bug]
+title: "bug: "
+
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what actually happened?
+      placeholder: |
+        Expected: ⌘E to enter edit mode for a markdown file
+        Got: nothing happens
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: A short, ordered list. Include the file you opened if relevant.
+      placeholder: |
+        1. Open a markdown file
+        2. Press ⌘E
+        3. Observe …
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: input
+    id: kindmd-version
+    attributes:
+      label: kindmd version
+      description: From the About menu, or `package.json` if running from source.
+      placeholder: e.g. 1.0.0
+
+  - type: input
+    id: macos-version
+    attributes:
+      label: macOS version
+      placeholder: e.g. 14.5 (Sonoma)
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or recording (optional)
+      description: Drag-and-drop an image or short clip if it helps.
+
+  - type: textarea
+    id: console
+    attributes:
+      label: Console output (optional)
+      description: View → Toggle Developer Tools → Console. Paste anything red.
+      render: shell
