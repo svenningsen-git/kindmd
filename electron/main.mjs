@@ -99,20 +99,29 @@ function parseCsv(text, separator) {
   return { rows, separator: sep };
 }
 
+// True when we have a live window we can deliver an event to.
+function windowAlive() {
+  return !!mainWindow && !mainWindow.isDestroyed();
+}
+
 // Send the cached file path to the renderer, waiting for it to be ready if
-// the window is still loading.
+// the window is still loading. Tolerates a destroyed/closed window — the
+// caller is expected to (re)create one when needed.
 function deliverPendingFileToRenderer() {
-  if (!mainWindow || !lastOpenedFile) return;
+  if (!windowAlive() || !lastOpenedFile) return;
   const send = () => {
+    if (!windowAlive()) return;
     try {
       mainWindow.webContents.send("file-opened", lastOpenedFile);
-    } catch { /* ignore */ }
+    } catch { /* ignore — webContents may have died between checks */ }
   };
-  if (mainWindow.webContents.isLoading()) {
-    mainWindow.webContents.once("did-finish-load", send);
-  } else {
-    send();
-  }
+  try {
+    if (mainWindow.webContents.isLoading()) {
+      mainWindow.webContents.once("did-finish-load", send);
+    } else {
+      send();
+    }
+  } catch { /* ignore */ }
 }
 
 // ----- App config -----
@@ -144,6 +153,14 @@ function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, "index.html"));
   mainWindow.once("ready-to-show", () => mainWindow.show());
+
+  // Null the reference as soon as the window dies. Otherwise `mainWindow`
+  // would point at a destroyed BrowserWindow and any later access (e.g. an
+  // open-file event after the window was closed) would throw
+  // "Object has been destroyed".
+  mainWindow.once("closed", () => {
+    mainWindow = null;
+  });
 
   mainWindow.webContents.on("will-navigate", (e, url) => {
     // External links open in the user's default browser, not the app shell.
@@ -578,9 +595,25 @@ app.on("window-all-closed", () => {
 // Open file from Finder ("Open With…", double-click, drag-on-dock). Fires
 // before or after `ready` depending on launch path; we cache the path
 // unconditionally and deliver to the renderer when it's available.
+//
+// macOS keeps the app alive after the window is closed. If a file is opened
+// in that windowless state, we re-create the window and let `did-finish-load`
+// pick the cached file up — matching the behaviour users expect from native
+// document apps (TextEdit, Preview, etc.).
 app.on("open-file", (e, filePath) => {
   e.preventDefault();
   lastOpenedFile = filePath;
   lastOpenedFolder = path.dirname(filePath);
+  if (!app.isReady()) return; // pre-`ready`: whenReady handler will deliver
+  if (!windowAlive()) {
+    createWindow();
+    mainWindow.webContents.once("did-finish-load", () => {
+      deliverPendingFileToRenderer();
+    });
+    return;
+  }
   deliverPendingFileToRenderer();
+  // Bring the existing window to the foreground so the user sees the new doc.
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.focus();
 });
