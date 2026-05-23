@@ -29,7 +29,7 @@
     "test": "node test/smoke.js",
     "dist": "electron-builder --mac --x64 --arm64 --dir",
     "dist:dmg": "electron-builder --mac --x64 --arm64",
-    "install-app": "rm -rf '/Applications/kindmd.app' && (cp -R 'dist/mac-arm64/kindmd.app' /Applications/ 2>/dev/null || cp -R 'dist/mac/kindmd.app' /Applications/) && xattr -cr '/Applications/kindmd.app' && codesign --force --deep --sign - '/Applications/kindmd.app' && /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister -f '/Applications/kindmd.app' && swift build/set-default-handler.swift && rm -rf dist && echo 'installed → /Applications/kindmd.app (build artifact removed)'"
+    "install-app": "pkill -9 -f '/Applications/kindmd.app' 2>/dev/null; sleep 1; rm -rf '/Applications/kindmd.app' && (cp -R 'dist/mac-arm64/kindmd.app' /Applications/ 2>/dev/null || cp -R 'dist/mac/kindmd.app' /Applications/) && xattr -cr '/Applications/kindmd.app' && codesign --force --deep --sign - '/Applications/kindmd.app' && /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister -f '/Applications/kindmd.app' && swift build/set-default-handler.swift && rm -rf dist && echo 'installed → /Applications/kindmd.app (build artifact removed)'"
   },
   "build": {
     "appId": "com.kindmd.app",
