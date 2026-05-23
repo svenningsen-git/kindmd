@@ -1,0 +1,1320 @@
+/* kindmd v1 — editorial styles. System fonts only. No external loads. */
+
+:root {
+  --paper:       #F5F1E8;
+  --paper-deep:  #EBE5D4;
+  --ink:         #1C1917;
+  --ink-soft:    #44403C;
+  --ink-mute:    #78716C;
+  --rule:        #D9D2C2;
+  --rule-soft:   #E4DDC9;
+  --oxblood:     #6B2737;
+  --oxblood-deep:#54202C;
+  --sage:        #5A6B47;
+  --caution:     #A4341A;
+  --gold:        #A8843F;
+  --gold-fill:   #E8C77A;
+  --chip-bg:     #EBE5D4;
+  --code-bg:     #1F1B17;
+  --code-fg:     #E8DFCD;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+               "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas,
+               "Liberation Mono", monospace;
+
+  --content-max: 720px;
+  --masthead-h: 64px;
+
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html { background: var(--paper); }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 15.5px;
+  line-height: 1.65;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-image:
+    radial-gradient(circle at 10% 5%, rgba(28,25,23,0.018) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(28,25,23,0.015) 0%, transparent 55%);
+}
+
+::selection { background: var(--gold-fill); color: var(--ink); }
+
+/* ---------- Accessibility primitives ---------- */
+
+.kindmd-visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.kindmd-skip-link {
+  position: absolute;
+  left: 12px; top: -40px;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 8px 14px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  text-decoration: none;
+  border-radius: 3px;
+  z-index: 100;
+  transition: top 0.12s ease;
+}
+.kindmd-skip-link:focus { top: 12px; }
+
+:focus { outline: none; }
+:focus-visible {
+  outline: 2px solid var(--oxblood);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* ---------- Masthead ---------- */
+
+.kindmd-masthead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(245, 241, 232, 0.92);
+  backdrop-filter: saturate(120%) blur(8px);
+  -webkit-backdrop-filter: saturate(120%) blur(8px);
+  border-bottom: 1px solid var(--rule);
+}
+
+.kindmd-masthead-inner {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 12px 24px;
+  min-height: var(--masthead-h);
+}
+
+.kindmd-brand {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--oxblood);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.kindmd-brand-dot { color: var(--ink-mute); margin: 0 1px; }
+.kindmd-brand:hover { color: var(--oxblood-deep); }
+
+.kindmd-title {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.012em;
+  color: var(--ink);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kindmd-masthead-tools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Search */
+.kindmd-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--paper-deep);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 4px 10px;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+.kindmd-search:focus-within {
+  border-color: var(--oxblood);
+  background: var(--paper);
+}
+.kindmd-search input {
+  background: transparent;
+  border: 0;
+  outline: 0;
+  font: 400 13.5px var(--font-sans);
+  color: var(--ink);
+  width: 200px;
+  padding: 4px 0;
+}
+.kindmd-search input::placeholder { color: var(--ink-mute); }
+.kindmd-search-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-mute);
+  min-width: 56px;
+  text-align: right;
+}
+.kindmd-search-count.is-empty { color: var(--caution); }
+
+/* Export button */
+.kindmd-export {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--oxblood);
+  background: transparent;
+  border: 1px solid var(--rule);
+  padding: 7px 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
+}
+.kindmd-export:hover {
+  border-color: var(--oxblood);
+  background: var(--paper-deep);
+}
+
+/* ---------- Layout ---------- */
+
+.kindmd-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr 240px;
+  max-width: 1400px;
+  margin: 0 auto;
+  gap: 24px;
+  padding: 24px;
+}
+
+body.kindmd-mode-file .kindmd-layout {
+  grid-template-columns: 1fr 240px;
+  max-width: 1080px;
+}
+
+@media (max-width: 1100px) {
+  .kindmd-layout {
+    grid-template-columns: 220px 1fr;
+  }
+  .kindmd-toc { display: none; }
+}
+
+@media (max-width: 800px) {
+  .kindmd-layout {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+  body.kindmd-mode-file .kindmd-layout { grid-template-columns: 1fr; }
+  .kindmd-tree { order: -1; max-height: 200px; overflow: auto; }
+  .kindmd-search input { width: 140px; }
+}
+
+/* ---------- File tree ---------- */
+
+.kindmd-tree {
+  border-right: 1px solid var(--rule);
+  padding-right: 16px;
+  position: sticky;
+  top: calc(var(--masthead-h) + 24px);
+  align-self: start;
+  max-height: calc(100vh - var(--masthead-h) - 48px);
+  overflow: auto;
+  font-size: 13.5px;
+}
+.kindmd-tree-title {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-mute);
+  margin: 4px 0 12px;
+}
+.kindmd-tree ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.kindmd-tree li { padding: 0; }
+.kindmd-tree-folder > .kindmd-tree-row {
+  cursor: pointer;
+  user-select: none;
+  font-weight: 600;
+}
+.kindmd-tree-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  text-decoration: none;
+  color: var(--ink-soft);
+  line-height: 1.4;
+}
+.kindmd-tree-row:hover { background: var(--paper-deep); color: var(--ink); }
+.kindmd-tree-row.is-active {
+  background: var(--paper-deep);
+  color: var(--oxblood);
+  font-weight: 600;
+  border-left: 2px solid var(--oxblood);
+  padding-left: 4px;
+}
+.kindmd-tree-chevron {
+  display: inline-block;
+  width: 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-mute);
+  transition: transform 0.12s ease;
+}
+.kindmd-tree-folder.is-collapsed .kindmd-tree-chevron { transform: rotate(-90deg); }
+.kindmd-tree-folder.is-collapsed > ul { display: none; }
+.kindmd-tree ul ul { padding-left: 16px; }
+.kindmd-tree-loading {
+  color: var(--ink-mute);
+  font-size: 13px;
+  margin: 0;
+}
+
+/* ---------- Article ---------- */
+
+.kindmd-main { min-width: 0; }
+.kindmd-article {
+  max-width: var(--content-max);
+  margin: 0;
+  padding: 24px 0 64px;
+}
+.kindmd-footer {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+/* H2 — numbered editorial section */
+.kindmd-section {
+  position: relative;
+  margin: 64px 0 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--rule);
+}
+.kindmd-section:first-of-type {
+  margin-top: 8px;
+  border-top: 0;
+  padding-top: 0;
+}
+.kindmd-section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0 0 16px;
+}
+.kindmd-section-header > h2 { margin: 0; }
+.kindmd-section-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+  background: var(--paper-deep);
+  border: 1px solid var(--rule);
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+  flex-shrink: 0;
+  line-height: 1;
+  align-self: center;
+}
+.kindmd-section-toggle:hover {
+  color: var(--oxblood);
+  background: var(--paper);
+  border-color: var(--oxblood);
+}
+.kindmd-section-chevron {
+  font-size: 11px;
+  transition: transform 0.18s ease;
+  display: inline-block;
+}
+.kindmd-section-label { display: inline-block; }
+.kindmd-section.is-collapsed .kindmd-section-chevron { transform: rotate(-90deg); }
+.kindmd-section.is-collapsed .kindmd-section-body { display: none; }
+
+.kindmd-article h2.kindmd-h2 {
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.028em;
+  color: var(--ink);
+  margin: 0;
+  scroll-margin-top: 90px;
+}
+
+/* H3 */
+.kindmd-article h3 {
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.30;
+  letter-spacing: -0.018em;
+  color: var(--ink);
+  margin: 36px 0 12px;
+  scroll-margin-top: 90px;
+}
+
+/* H4 — eyebrow */
+.kindmd-article h4 {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+  color: var(--oxblood);
+  margin: 32px 0 8px;
+}
+
+/* Demoted H5/H6 → bold body */
+.kindmd-article p.kindmd-h-demoted {
+  font-weight: 600;
+  margin: 20px 0 8px;
+}
+
+/* Body */
+.kindmd-article p {
+  margin: 0 0 16px;
+  color: var(--ink);
+}
+
+.kindmd-article p + p { margin-top: 0; }
+
+.kindmd-article a.kindmd-link {
+  color: var(--oxblood);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(107, 39, 55, 0.45);
+  transition: text-decoration-color 0.12s ease;
+}
+.kindmd-article a.kindmd-link:hover {
+  text-decoration-color: var(--oxblood);
+}
+.kindmd-article a.kindmd-link-external::after {
+  content: " ↗";
+  font-size: 0.85em;
+  color: var(--ink-mute);
+}
+.kindmd-article a.kindmd-broken {
+  color: var(--caution);
+  text-decoration: underline dotted var(--caution);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+/* Lists — headings flush-left, bullets/numbers indented inward. */
+.kindmd-article ul,
+.kindmd-article ol {
+  margin: 0 0 20px;
+  padding-left: 24px;
+  list-style: none;
+}
+.kindmd-article ol { counter-reset: kindmd-ol; }
+.kindmd-article li {
+  margin: 4px 0;
+  position: relative;
+}
+.kindmd-article ul > li::before {
+  content: "•";
+  color: var(--ink-mute);
+  position: absolute;
+  left: -16px;
+  top: 0;
+}
+.kindmd-article ol > li {
+  counter-increment: kindmd-ol;
+}
+.kindmd-article ol > li::before {
+  content: counter(kindmd-ol) ".";
+  color: var(--ink-mute);
+  font-variant-numeric: tabular-nums;
+  position: absolute;
+  left: -24px;
+  top: 0;
+}
+.kindmd-article li > ul,
+.kindmd-article li > ol { margin: 6px 0; }
+
+/* Task list items render as regular bullets — markdown source ([ ] / [x]) is
+   the source of truth; the rendered view doesn't claim editability. The
+   checkbox is hidden; the label text gets the standard bullet treatment. */
+.kindmd-article li.task-list-item input[type="checkbox"] {
+  display: none;
+}
+.kindmd-article li.task-list-item label {
+  display: inline;
+}
+
+/* Inline code */
+.kindmd-article code.kindmd-code-inline,
+.kindmd-article p code,
+.kindmd-article li code,
+.kindmd-article td code,
+.kindmd-article th code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  background: var(--chip-bg);
+  color: var(--ink);
+  padding: 1.5px 6px;
+  border-radius: 3px;
+  border: 1px solid var(--rule);
+}
+
+/* Code blocks */
+.kindmd-code {
+  margin: 24px 0;
+  border-radius: 7px;
+  overflow: hidden;
+  background: var(--code-bg);
+  border: 1px solid #2A2622;
+}
+.kindmd-code-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #B3A586;
+  background: #181513;
+  padding: 7px 14px;
+  border-bottom: 1px solid #2A2622;
+}
+.kindmd-code-pre {
+  margin: 0;
+  padding: 14px 16px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--code-fg);
+  background: var(--code-bg);
+}
+.kindmd-code-pre code { font-family: inherit; font-size: inherit; }
+
+/* Prism token colours tuned for the paper palette */
+.kindmd-code-pre .token.comment,
+.kindmd-code-pre .token.prolog,
+.kindmd-code-pre .token.doctype,
+.kindmd-code-pre .token.cdata { color: #8A8270; font-style: italic; }
+.kindmd-code-pre .token.punctuation { color: #B3A586; }
+.kindmd-code-pre .token.property,
+.kindmd-code-pre .token.tag,
+.kindmd-code-pre .token.boolean,
+.kindmd-code-pre .token.number,
+.kindmd-code-pre .token.constant,
+.kindmd-code-pre .token.symbol { color: #E8B05E; }
+.kindmd-code-pre .token.selector,
+.kindmd-code-pre .token.attr-name,
+.kindmd-code-pre .token.string,
+.kindmd-code-pre .token.char,
+.kindmd-code-pre .token.builtin,
+.kindmd-code-pre .token.inserted { color: #A8C49A; }
+.kindmd-code-pre .token.operator,
+.kindmd-code-pre .token.entity,
+.kindmd-code-pre .token.url,
+.kindmd-code-pre .language-css .token.string,
+.kindmd-code-pre .style .token.string { color: #D9C2A0; }
+.kindmd-code-pre .token.atrule,
+.kindmd-code-pre .token.attr-value,
+.kindmd-code-pre .token.keyword { color: #F2A7A7; }
+.kindmd-code-pre .token.function,
+.kindmd-code-pre .token.class-name { color: #F5C690; }
+.kindmd-code-pre .token.regex,
+.kindmd-code-pre .token.important,
+.kindmd-code-pre .token.variable { color: #E8B05E; }
+.kindmd-code-pre .token.deleted { color: #E89A8C; }
+
+/* Blockquote */
+.kindmd-article blockquote.kindmd-blockquote {
+  margin: 24px 0;
+  padding: 4px 0 4px 22px;
+  border-left: 3px solid var(--oxblood);
+  color: var(--ink-soft);
+  font-size: 16.5px;
+  line-height: 1.55;
+}
+.kindmd-article blockquote.kindmd-blockquote > p { margin-bottom: 8px; }
+.kindmd-article blockquote.kindmd-blockquote > p:last-child { margin-bottom: 0; }
+
+/* Tables */
+.kindmd-table-wrap {
+  margin: 24px 0;
+  overflow-x: auto;
+  position: relative;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: var(--paper);
+}
+.kindmd-table-caption {
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  color: var(--ink-mute);
+}
+.kindmd-article table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.kindmd-article table thead th {
+  background: var(--paper-deep);
+  border-bottom: 1.5px solid var(--ink);
+  text-align: left;
+  font-weight: 600;
+  color: var(--ink);
+  padding: 10px 16px;
+}
+.kindmd-article table tbody td {
+  border-bottom: 1px solid var(--rule-soft);
+  padding: 10px 16px;
+  color: var(--ink);
+  vertical-align: top;
+}
+.kindmd-article table tbody tr:last-child td { border-bottom: 0; }
+.kindmd-article table th.kindmd-num,
+.kindmd-article table td.kindmd-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.kindmd-article table th.kindmd-center,
+.kindmd-article table td.kindmd-center { text-align: center; }
+
+/* Thematic break */
+.kindmd-hr {
+  border: 0;
+  height: 24px;
+  margin: 40px 0;
+  background: transparent;
+  text-align: center;
+  position: relative;
+}
+.kindmd-hr::after {
+  content: "✦ ✦ ✦";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  letter-spacing: 0.6em;
+  color: var(--ink-mute);
+}
+
+/* Figures */
+.kindmd-figure {
+  margin: 28px 0;
+  text-align: center;
+}
+.kindmd-figure img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  border: 1px solid var(--rule);
+}
+.kindmd-figure-caption {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--ink-mute);
+}
+
+/* Anchor link inside headings (markdown-it-anchor) */
+.kindmd-anchor {
+  opacity: 0;
+  margin-left: 8px;
+  text-decoration: none;
+  color: var(--ink-mute);
+  font-size: 0.8em;
+  transition: opacity 0.12s ease;
+}
+.kindmd-article h2:hover .kindmd-anchor,
+.kindmd-article h3:hover .kindmd-anchor { opacity: 1; }
+
+/* ---------- TOC ---------- */
+
+.kindmd-toc {
+  position: sticky;
+  top: calc(var(--masthead-h) + 24px);
+  align-self: start;
+  max-height: calc(100vh - var(--masthead-h) - 48px);
+  overflow: auto;
+  padding-left: 16px;
+  border-left: 1px solid var(--rule);
+}
+.kindmd-toc-title {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-mute);
+  margin: 4px 0 12px;
+}
+.kindmd-toc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.kindmd-toc-list li { margin: 2px 0; }
+.kindmd-toc-list a {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 6px;
+  align-items: baseline;
+  padding: 6px 8px 6px 10px;
+  text-decoration: none;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.4;
+  border-left: 2px solid transparent;
+  border-radius: 0 4px 4px 0;
+  transition: color 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+.kindmd-toc-list a:hover { color: var(--oxblood); background: var(--paper-deep); }
+.kindmd-toc-list a[aria-current="location"] {
+  color: var(--oxblood);
+  font-weight: 600;
+  border-left-color: var(--oxblood);
+  background: var(--paper-deep);
+}
+.kindmd-toc-num {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-mute);
+  letter-spacing: 0.04em;
+}
+.kindmd-toc-empty {
+  font-size: 13px;
+  color: var(--ink-mute);
+  margin: 0;
+}
+
+/* ---------- Footer ---------- */
+
+.kindmd-footer {
+  max-width: var(--content-max);
+  margin: 48px auto 0;
+  padding: 18px 0 12px;
+  border-top: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-mute);
+  letter-spacing: 0.04em;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.kindmd-footer-sep { opacity: 0.5; }
+
+/* ---------- Search highlights ---------- */
+
+.kindmd-search-mark {
+  background: rgba(168, 132, 63, 0.18);
+  color: inherit;
+  border-bottom: 1.5px solid var(--gold);
+  padding: 0 1px;
+  border-radius: 1px;
+}
+.kindmd-search-mark.is-current {
+  background: var(--gold-fill);
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+
+/* ---------- Smooth scroll ---------- */
+
+html { scroll-behavior: smooth; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0ms !important;
+    transition-duration: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+  html { scroll-behavior: auto; }
+}
+
+/* ---------- Color swatches ---------- */
+
+.kindmd-color {
+  white-space: nowrap;
+}
+.kindmd-color-swatch {
+  display: inline-block;
+  width: 0.85em;
+  height: 0.85em;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: -0.10em;
+  border: 1px solid rgba(0, 0, 0, 0.22);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.7) inset;
+  background-clip: padding-box;
+}
+/* Dark code-block surface — invert the inset highlight */
+.kindmd-code-pre .kindmd-color-swatch {
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.55) inset;
+}
+
+/* ---------- Markdown table copy button ---------- */
+/* Sits in the top-right corner of any .kindmd-table-wrap, visible on hover. */
+.kindmd-table-wrap { position: relative; }
+.kindmd-table-copy {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+.kindmd-table-copy:hover {
+  color: var(--oxblood);
+  border-color: var(--oxblood);
+  background: var(--paper-deep);
+}
+.kindmd-table-copy.is-floating {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.12s ease, border-color 0.12s ease;
+}
+.kindmd-table-wrap:hover .kindmd-table-copy.is-floating,
+.kindmd-table-wrap:focus-within .kindmd-table-copy.is-floating {
+  opacity: 1;
+}
+
+/* ---------- CSV reader mode ---------- */
+
+.kindmd-csv {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 auto;
+  /* The article becomes a flex column when CSV is active, so we just fill it. */
+}
+
+/* Make the main pane a single non-scrolling region while a CSV is open —
+   the .kindmd-csv-scroll inside owns the scroll so sticky positioning lands
+   in one predictable layer. */
+body.kindmd-csv-active .kindmd-app-main { overflow: hidden; }
+body.kindmd-csv-active .kindmd-article {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding-bottom: 16px;
+}
+
+.kindmd-csv-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0 12px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink-mute);
+  letter-spacing: 0.04em;
+}
+.kindmd-csv-meta { white-space: nowrap; }
+.kindmd-csv-actions { display: flex; align-items: center; gap: 8px; }
+
+.kindmd-csv-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: var(--paper);
+  -webkit-overflow-scrolling: touch;
+}
+
+.kindmd-csv-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: max-content;
+  min-width: 100%;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  line-height: 1.45;
+  background: var(--paper);
+}
+
+/* Column-letter row (Excel A, B, C …) */
+.kindmd-csv-colletters th {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  background: var(--paper-deep);
+  color: var(--ink-mute);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-align: center;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--rule);
+  border-right: 1px solid var(--rule-soft);
+  white-space: nowrap;
+}
+.kindmd-csv-colletters th.kindmd-csv-corner {
+  left: 0;
+  z-index: 6;
+  background: var(--paper-deep);
+  min-width: 44px;
+  width: 44px;
+}
+
+/* Header row (sticky beneath the column-letter row) */
+.kindmd-csv-headers th {
+  position: sticky;
+  top: 23px; /* below the letter row — keep in sync with .colletters th height */
+  z-index: 3;
+  background: var(--paper-deep);
+  color: var(--ink);
+  text-align: left;
+  font-weight: 600;
+  padding: 0;
+  border-bottom: 1.5px solid var(--ink);
+  border-right: 1px solid var(--rule-soft);
+  white-space: nowrap;
+  min-width: 110px;
+}
+.kindmd-csv-headers th.kindmd-csv-rownum-head {
+  left: 0;
+  z-index: 5;
+  background: var(--paper-deep);
+  padding: 6px 8px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-mute);
+  letter-spacing: 0.05em;
+  min-width: 44px;
+  width: 44px;
+}
+
+.kindmd-csv-header { padding: 0; }
+.kindmd-csv-sort {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px 8px 12px;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  letter-spacing: -0.005em;
+}
+.kindmd-csv-sort:hover { background: rgba(0, 0, 0, 0.04); }
+.kindmd-csv-header-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kindmd-csv-sort-glyph {
+  font-size: 10.5px;
+  color: var(--ink-mute);
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+}
+.kindmd-csv-header.is-sorted .kindmd-csv-sort-glyph { color: var(--oxblood); }
+.kindmd-csv-filter-btn {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  color: var(--ink-mute);
+  font-size: 11px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s ease, background 0.12s ease, color 0.12s ease, transform 0.12s ease;
+}
+.kindmd-csv-header { position: relative; }
+.kindmd-csv-header:hover .kindmd-csv-filter-btn,
+.kindmd-csv-header.has-filter .kindmd-csv-filter-btn { opacity: 1; }
+.kindmd-csv-filter-btn:hover { background: var(--paper); color: var(--oxblood); }
+/* Active filter — turn the button into a solid oxblood pill so it reads
+   instantly as "this column is filtered". */
+.kindmd-csv-header.has-filter .kindmd-csv-filter-btn,
+.kindmd-csv-filter-btn.is-active {
+  background: var(--oxblood);
+  color: var(--paper);
+  box-shadow: 0 1px 4px rgba(107, 39, 55, 0.32);
+}
+.kindmd-csv-header.has-filter .kindmd-csv-filter-btn:hover,
+.kindmd-csv-filter-btn.is-active:hover {
+  background: var(--oxblood-deep);
+  color: var(--paper);
+  transform: translateY(-50%) scale(1.06);
+}
+.kindmd-csv-filter-glyph { line-height: 1; font-size: 11px; }
+
+/* Whole-column emphasis when a filter is applied — tints the letter strip,
+   underlines the header, and warms the body cells. */
+.kindmd-csv-colletters th.kindmd-csv-collabel.is-filtered {
+  background: var(--oxblood);
+  color: var(--paper);
+}
+.kindmd-csv-headers th.kindmd-csv-header.has-filter {
+  background: #EEDFE2; /* paper-deep, warm-tinted toward oxblood */
+  box-shadow: inset 0 -3px 0 0 var(--oxblood);
+}
+.kindmd-csv-headers th.kindmd-csv-header.has-filter .kindmd-csv-header-text {
+  color: var(--oxblood);
+  font-weight: 700;
+}
+.kindmd-csv-headers th.kindmd-csv-header.has-filter.is-first {
+  background: #EEDFE2;
+}
+.kindmd-csv-table tbody td.kindmd-csv-cell.is-filtered {
+  background: #FAF1EE; /* whisper of oxblood on the data cells */
+}
+.kindmd-csv-table tbody tr:nth-child(2n) td.kindmd-csv-cell.is-filtered {
+  background: #F5E9E5;
+}
+.kindmd-csv-table tbody tr:hover td.kindmd-csv-cell.is-filtered {
+  background: #F1DDD8;
+}
+/* Keep the sticky first-column treatment when it's also filtered. */
+.kindmd-csv-table tbody td.kindmd-csv-cell.is-first.is-filtered {
+  background: #F5E9E5;
+}
+.kindmd-csv-table tbody tr:nth-child(2n) td.kindmd-csv-cell.is-first.is-filtered {
+  background: #EEDFE2;
+}
+
+/* Body cells */
+.kindmd-csv-table tbody td {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--rule-soft);
+  border-right: 1px solid var(--rule-soft);
+  color: var(--ink);
+  white-space: nowrap;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: var(--paper);
+}
+.kindmd-csv-table tbody tr:nth-child(2n) td { background: rgba(0, 0, 0, 0.012); }
+.kindmd-csv-table tbody tr:hover td { background: rgba(168, 132, 63, 0.07); }
+
+/* Row-number column (left sticky pane) */
+.kindmd-csv-table tbody th.kindmd-csv-rownum {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--paper-deep);
+  color: var(--ink-mute);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  text-align: center;
+  padding: 6px 8px;
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule-soft);
+  min-width: 44px;
+  width: 44px;
+}
+.kindmd-csv-table tbody tr:hover th.kindmd-csv-rownum {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* First *data* column — sticky + bold (Excel first-column freeze) */
+.kindmd-csv-colletters th.kindmd-csv-collabel:nth-child(2),
+.kindmd-csv-headers th.kindmd-csv-header.is-first {
+  position: sticky;
+  left: 44px; /* row-num col width */
+  z-index: 4;
+}
+.kindmd-csv-colletters th.kindmd-csv-collabel:nth-child(2) { z-index: 5; background: var(--paper-deep); }
+.kindmd-csv-headers th.kindmd-csv-header.is-first {
+  z-index: 4;
+  background: var(--paper-deep);
+  font-weight: 700;
+}
+.kindmd-csv-table tbody td.kindmd-csv-cell.is-first {
+  position: sticky;
+  left: 44px;
+  background: var(--paper);
+  font-weight: 600;
+  border-right: 1px solid var(--rule);
+  z-index: 1;
+}
+.kindmd-csv-table tbody tr:nth-child(2n) td.kindmd-csv-cell.is-first {
+  background: var(--paper-deep);
+}
+.kindmd-csv-table tbody tr:hover td.kindmd-csv-cell.is-first {
+  background: var(--paper);
+}
+
+.kindmd-csv-empty {
+  text-align: center;
+  color: var(--ink-mute);
+  font-style: italic;
+  padding: 32px 16px;
+  background: var(--paper);
+}
+
+/* ---------- CSV column manager (toolbar popover) ---------- */
+
+.kindmd-csv-cols-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.kindmd-csv-cols-caret {
+  font-size: 9px;
+  color: inherit;
+  opacity: 0.6;
+}
+
+.kindmd-csv-cols-popover {
+  position: fixed;
+  z-index: 1100;
+  width: 280px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 12px 32px rgba(0, 0, 0, 0.14);
+  padding: 10px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink);
+}
+.kindmd-csv-cols-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-mute);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+.kindmd-csv-cols-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 360px;
+  overflow-y: auto;
+  border: 1px solid var(--rule-soft);
+  border-radius: 4px;
+  background: var(--paper);
+}
+.kindmd-csv-col-item { margin: 0; }
+.kindmd-csv-col-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  cursor: pointer;
+  user-select: none;
+}
+.kindmd-csv-col-row:hover { background: var(--paper-deep); }
+.kindmd-csv-col-row input[type="checkbox"] {
+  accent-color: var(--oxblood);
+  margin: 0;
+  flex-shrink: 0;
+}
+.kindmd-csv-col-letter {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-mute);
+  letter-spacing: 0.04em;
+  min-width: 22px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.kindmd-csv-col-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+}
+
+/* ---------- CSV filter popover ---------- */
+
+.kindmd-csv-filter-popover {
+  position: fixed;
+  z-index: 1100;
+  width: 260px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 12px 32px rgba(0, 0, 0, 0.14);
+  padding: 10px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink);
+}
+.kindmd-csv-filter-search { margin-bottom: 8px; }
+.kindmd-csv-filter-search input {
+  width: 100%;
+  padding: 6px 8px;
+  background: var(--paper-deep);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  font: inherit;
+  color: var(--ink);
+  outline: none;
+}
+.kindmd-csv-filter-search input:focus {
+  border-color: var(--oxblood);
+  background: var(--paper);
+}
+.kindmd-csv-filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-mute);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+.kindmd-csv-filter-link {
+  background: transparent;
+  border: 0;
+  padding: 2px 4px;
+  font: inherit;
+  color: var(--oxblood);
+  cursor: pointer;
+}
+.kindmd-csv-filter-link:hover { text-decoration: underline; }
+.kindmd-csv-filter-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid var(--rule-soft);
+  border-radius: 4px;
+  background: var(--paper);
+}
+.kindmd-csv-filter-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+.kindmd-csv-filter-item:hover { background: var(--paper-deep); }
+.kindmd-csv-filter-item input[type="checkbox"] {
+  accent-color: var(--oxblood);
+  margin: 0;
+  flex-shrink: 0;
+}
+.kindmd-csv-filter-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kindmd-csv-filter-count {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-mute);
+}
+.kindmd-csv-filter-empty {
+  padding: 12px;
+  text-align: center;
+  color: var(--ink-mute);
+  font-style: italic;
+}
+.kindmd-csv-filter-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+.kindmd-csv-filter-cancel,
+.kindmd-csv-filter-apply {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--rule);
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.kindmd-csv-filter-apply {
+  background: var(--oxblood);
+  border-color: var(--oxblood);
+  color: var(--paper);
+}
+.kindmd-csv-filter-cancel:hover { border-color: var(--oxblood); color: var(--oxblood); }
+.kindmd-csv-filter-apply:hover { background: var(--oxblood-deep); border-color: var(--oxblood-deep); }
+
+/* Hide the edit pane / hints entirely when a CSV is open */
+body.kindmd-csv-active [data-edit-pane],
+body.kindmd-csv-active [data-edit-hints] { display: none !important; }
+
+/* ---------- Empty / error states ---------- */
+
+.kindmd-empty {
+  max-width: 480px;
+  margin: 80px auto;
+  text-align: center;
+  color: var(--ink-mute);
+}
+.kindmd-empty em { font-style: italic; }
+
+.kindmd-error {
+  color: var(--caution);
+}

@@ -1,0 +1,141 @@
+{
+  "name": "kindmd",
+  "version": "1.0.0",
+  "description": "An editorial markdown reader. Any markdown file becomes a thoughtfully designed editorial page.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "kindmd": "bin/kindmd.js"
+  },
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./render": "./src/render.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "client",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node bin/kindmd.js",
+    "app": "electron electron/main.mjs",
+    "test": "node test/smoke.js",
+    "dist": "electron-builder --mac --x64 --arm64 --dir",
+    "dist:dmg": "electron-builder --mac --x64 --arm64",
+    "install-app": "rm -rf '/Applications/kindmd.app' && (cp -R 'dist/mac-arm64/kindmd.app' /Applications/ 2>/dev/null || cp -R 'dist/mac/kindmd.app' /Applications/) && xattr -cr '/Applications/kindmd.app' && codesign --force --deep --sign - '/Applications/kindmd.app' && /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister -f '/Applications/kindmd.app' && swift build/set-default-handler.swift && rm -rf dist && echo 'installed → /Applications/kindmd.app (build artifact removed)'"
+  },
+  "build": {
+    "appId": "com.kindmd.app",
+    "productName": "kindmd",
+    "copyright": "Copyright © 2026 kindmd contributors",
+    "extraMetadata": {
+      "main": "electron/main.mjs"
+    },
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "files": [
+      "bin/**/*",
+      "src/**/*",
+      "client/**/*",
+      "electron/**/*",
+      "package.json",
+      "!**/*.md",
+      "!test/**",
+      "!build/icon.iconset/**",
+      "!build/*.svg",
+      "!build/*.png"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/prismjs/components/**"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.icns",
+      "target": [
+        { "target": "default", "arch": ["arm64", "x64"] }
+      ],
+      "darkModeSupport": false,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "identity": null,
+      "extendInfo": {
+        "NSHumanReadableCopyright": "Copyright © 2026 kindmd contributors",
+        "LSMinimumSystemVersion": "11.0"
+      }
+    },
+    "fileAssociations": [
+      {
+        "ext": "md",
+        "name": "Markdown Document",
+        "description": "Markdown source file",
+        "role": "Editor",
+        "rank": "Default",
+        "icon": "build/icon.icns"
+      },
+      {
+        "ext": "markdown",
+        "name": "Markdown Document",
+        "description": "Markdown source file",
+        "role": "Editor",
+        "rank": "Alternate",
+        "icon": "build/icon.icns"
+      },
+      {
+        "ext": "mdown",
+        "name": "Markdown Document",
+        "role": "Editor",
+        "rank": "Alternate",
+        "icon": "build/icon.icns"
+      },
+      {
+        "ext": "mkd",
+        "name": "Markdown Document",
+        "role": "Editor",
+        "rank": "Alternate",
+        "icon": "build/icon.icns"
+      },
+      {
+        "ext": "csv",
+        "name": "Comma-Separated Values",
+        "description": "Tabular data",
+        "role": "Editor",
+        "rank": "Owner",
+        "icon": "build/icon.icns"
+      },
+      {
+        "ext": "tsv",
+        "name": "Tab-Separated Values",
+        "description": "Tabular data",
+        "role": "Editor",
+        "rank": "Owner",
+        "icon": "build/icon.icns"
+      }
+    ]
+  },
+  "dependencies": {
+    "chokidar": "^3.6.0",
+    "commander": "^12.1.0",
+    "express": "^4.19.2",
+    "gray-matter": "^4.0.3",
+    "markdown-it": "^14.1.0",
+    "markdown-it-anchor": "^9.0.1",
+    "markdown-it-attrs": "^4.2.0",
+    "markdown-it-task-lists": "^2.1.1",
+    "open": "^10.1.0",
+    "prismjs": "^1.29.0"
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^26.8.1"
+  }
+}

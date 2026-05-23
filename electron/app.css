@@ -1,0 +1,579 @@
+/* Mac chrome on top of the editorial palette already loaded from client/styles.css */
+
+html, body {
+  height: 100%;
+  margin: 0;
+  /* Allow vibrancy to show through the body */
+  background: transparent;
+}
+
+body.kindmd-mode-app {
+  font-family: var(--font-sans);
+  color: var(--ink);
+  background: transparent;
+  overflow: hidden;
+}
+
+.kindmd-app {
+  display: grid;
+  grid-template-columns: 260px 1fr 240px;
+  height: 100vh;
+  width: 100vw;
+}
+
+.kindmd-app[data-toc-hidden="true"] {
+  grid-template-columns: 260px 1fr;
+}
+
+.kindmd-app[data-sidebar-hidden="true"] {
+  grid-template-columns: 0 1fr 240px;
+}
+
+.kindmd-app[data-sidebar-hidden="true"][data-toc-hidden="true"] {
+  grid-template-columns: 0 1fr;
+}
+
+.kindmd-app[data-sidebar-hidden="true"] .kindmd-app-sidebar { display: none; }
+.kindmd-app[data-toc-hidden="true"] .kindmd-app-toc { display: none; }
+
+/* CSV mode: TOC pane has nothing to show — columns live in the toolbar. */
+body.kindmd-csv-active .kindmd-app { grid-template-columns: 260px 1fr; }
+body.kindmd-csv-active .kindmd-app[data-sidebar-hidden="true"] { grid-template-columns: 0 1fr; }
+body.kindmd-csv-active .kindmd-app-toc { display: none; }
+
+/* ---------- Sidebar (Finder-style) ---------- */
+
+.kindmd-app-sidebar {
+  /* Solid warm paper tone — matches the editorial palette across panes */
+  background: #F2EEE5;
+  border-right: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.kindmd-app-sidebar-header {
+  -webkit-app-region: drag;
+  app-region: drag;
+  padding: 16px 16px 8px 88px; /* leave room for traffic lights */
+  display: flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-mute);
+  letter-spacing: 0.06em;
+}
+
+.kindmd-app-sidebar-brand {
+  color: var(--oxblood);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.kindmd-app-sidebar-folder {
+  padding: 4px 8px 8px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.kindmd-app-folder-btn {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  text-align: left;
+  transition: background 0.12s ease;
+}
+.kindmd-app-folder-btn:hover { background: rgba(0,0,0,0.04); }
+.kindmd-app-folder-btn:active { background: rgba(0,0,0,0.08); }
+.kindmd-app-folder-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+.kindmd-app-folder-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kindmd-app-folder-chevron {
+  color: var(--ink-mute);
+  font-size: 11px;
+  transform: rotate(180deg);
+}
+
+/* Tree */
+.kindmd-app-tree {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 0 16px;
+  -webkit-app-region: no-drag;
+}
+
+.kindmd-app-tree-empty {
+  padding: 16px 20px;
+  text-align: center;
+  color: var(--ink-mute);
+  font-size: 13px;
+}
+.kindmd-app-tree-empty p { margin: 0 0 12px; }
+
+.kindmd-app-open-btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--oxblood);
+  background: transparent;
+  border: 1px solid var(--rule);
+  padding: 6px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 4px auto;
+  display: block;
+  width: 80%;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+.kindmd-app-open-btn:hover { border-color: var(--oxblood); background: var(--paper-deep); }
+.kindmd-app-open-btn-secondary { color: var(--ink-mute); }
+
+/* Tree items */
+.kindmd-app-tree ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.kindmd-app-tree-node {
+  font-size: 13px;
+  line-height: 1.35;
+  user-select: none;
+}
+
+.kindmd-app-tree-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px 3px 4px;
+  margin: 1px 6px;
+  border-radius: 5px;
+  cursor: pointer;
+  color: var(--ink-soft);
+  transition: background 0.08s ease, color 0.08s ease;
+}
+.kindmd-app-tree-row:hover { background: rgba(0,0,0,0.04); }
+.kindmd-app-tree-row.is-active {
+  background: var(--oxblood);
+  color: var(--paper);
+}
+.kindmd-app-tree-row.is-active .kindmd-app-tree-chevron,
+.kindmd-app-tree-row.is-active .kindmd-app-tree-icon { color: var(--paper); }
+
+.kindmd-app-tree-row.is-disabled {
+  color: var(--ink-mute);
+  cursor: default;
+  opacity: 0.6;
+}
+.kindmd-app-tree-row.is-disabled:hover { background: transparent; }
+
+.kindmd-app-tree-chevron {
+  display: inline-block;
+  width: 14px;
+  text-align: center;
+  font-size: 9px;
+  color: var(--ink-mute);
+  transition: transform 0.12s ease;
+  flex-shrink: 0;
+}
+.kindmd-app-tree-folder.is-collapsed > .kindmd-app-tree-row > .kindmd-app-tree-chevron {
+  transform: rotate(-90deg);
+}
+.kindmd-app-tree-folder.is-collapsed > ul { display: none; }
+.kindmd-app-tree-chevron-spacer {
+  display: inline-block;
+  width: 14px;
+  flex-shrink: 0;
+}
+
+.kindmd-app-tree-icon {
+  display: inline-block;
+  width: 18px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-mute);
+  flex-shrink: 0;
+}
+.kindmd-app-tree-row.is-md .kindmd-app-tree-icon { color: var(--oxblood); }
+.kindmd-app-tree-row.is-csv .kindmd-app-tree-icon {
+  color: var(--ink-soft);
+  font-size: 12px;
+  letter-spacing: -1px;
+}
+.kindmd-app-tree-row.is-active .kindmd-app-tree-icon { color: var(--paper); }
+
+.kindmd-app-tree-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kindmd-app-tree-row.is-md .kindmd-app-tree-label,
+.kindmd-app-tree-row.is-csv .kindmd-app-tree-label { color: var(--ink); }
+.kindmd-app-tree-row.is-active .kindmd-app-tree-label { color: var(--paper); font-weight: 500; }
+
+.kindmd-app-tree ul ul {
+  padding-left: 16px;
+}
+
+/* ---------- Right-click context menu ---------- */
+
+.kindmd-context-menu {
+  position: fixed;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 10px 28px rgba(0, 0, 0, 0.12);
+  min-width: 220px;
+  padding: 6px 0;
+  z-index: 1000;
+  user-select: none;
+  font-family: var(--font-sans);
+  -webkit-app-region: no-drag;
+}
+.kindmd-context-menu[hidden] { display: none; }
+.kindmd-context-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 14px;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  cursor: pointer;
+  outline: none;
+}
+.kindmd-context-menu button:hover,
+.kindmd-context-menu button:focus-visible {
+  background: var(--oxblood);
+  color: var(--paper);
+}
+.kindmd-cm-icon {
+  display: inline-block;
+  width: 16px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink-mute);
+  flex-shrink: 0;
+}
+.kindmd-context-menu button:hover .kindmd-cm-icon,
+.kindmd-context-menu button:focus-visible .kindmd-cm-icon { color: var(--paper); }
+.kindmd-cm-sep {
+  height: 1px;
+  background: var(--rule);
+  margin: 4px 0;
+}
+
+/* Inline rename field — same row position as the label */
+.kindmd-app-tree-rename {
+  flex: 1;
+  min-width: 0;
+  background: var(--paper);
+  border: 1px solid var(--oxblood);
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink);
+  outline: none;
+  -webkit-app-region: no-drag;
+}
+.kindmd-app-tree-rename:focus {
+  border-color: var(--oxblood);
+  box-shadow: 0 0 0 2px rgba(107, 39, 55, 0.18);
+}
+.kindmd-app-tree-row.is-renaming { background: var(--paper-deep); }
+.kindmd-app-tree-row.is-renaming.is-active { background: var(--paper-deep); color: var(--ink); }
+
+/* ---------- Main pane ---------- */
+
+.kindmd-app-main {
+  background: var(--paper);
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.kindmd-app-titlebar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: rgba(245, 241, 232, 0.86);
+  backdrop-filter: saturate(140%) blur(12px);
+  -webkit-backdrop-filter: saturate(140%) blur(12px);
+  border-bottom: 1px solid var(--rule);
+}
+
+.kindmd-app-titlebar-drag {
+  height: 18px;
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+.kindmd-app-titlebar-inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 6px 20px 12px;
+}
+
+.kindmd-app-title {
+  flex: 1;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.012em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+.kindmd-app-search { -webkit-app-region: no-drag; }
+.kindmd-app-search input { width: 200px; }
+
+.kindmd-edit-toggle {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+  background: var(--paper-deep);
+  border: 1px solid var(--rule);
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+  line-height: 1;
+}
+.kindmd-edit-toggle:hover:not(:disabled) {
+  color: var(--oxblood);
+  border-color: var(--oxblood);
+  background: var(--paper);
+}
+.kindmd-edit-toggle[aria-pressed="true"] {
+  color: var(--paper);
+  background: var(--oxblood);
+  border-color: var(--oxblood);
+}
+.kindmd-edit-toggle:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.kindmd-edit-icon { font-size: 12px; }
+.kindmd-edit-dirty {
+  color: var(--gold);
+  font-size: 10px;
+  margin-left: -2px;
+}
+.kindmd-edit-toggle[aria-pressed="true"] .kindmd-edit-dirty { color: var(--gold-fill); }
+
+.kindmd-app-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  -webkit-app-region: no-drag;
+}
+
+.kindmd-app-main .kindmd-article {
+  max-width: none;
+  margin: 0;
+  padding: 28px 24px 64px;
+  width: 100%;
+}
+
+/* ---------- Edit mode ---------- */
+
+.kindmd-edit-pane {
+  flex-direction: column;
+  flex: 1 1 auto;
+  max-width: none;
+  margin: 0;
+  width: 100%;
+  padding: 28px 24px 64px;
+  min-height: 0;
+}
+/* `hidden` attribute is the single source of truth; UA already gives display:none. */
+.kindmd-edit-pane:not([hidden]) { display: flex; }
+[data-article][hidden] { display: none; }
+
+.kindmd-edit-textarea {
+  flex: 1;
+  width: 100%;
+  min-height: 320px;
+  background: transparent;
+  color: var(--ink);
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  line-height: 1.7;
+  resize: none;
+  outline: none;
+  caret-color: var(--oxblood);
+  tab-size: 2;
+  -moz-tab-size: 2;
+  letter-spacing: 0;
+}
+.kindmd-edit-textarea:focus { outline: none; }
+.kindmd-edit-textarea::selection { background: var(--gold-fill); color: var(--ink); }
+.kindmd-edit-textarea::placeholder { color: var(--ink-mute); }
+
+/* Floating "save / done" hint, bottom-right of the window while editing.
+   Sits inside the main column horizontally (sibling-aware of the TOC pane). */
+.kindmd-edit-hints {
+  position: fixed;
+  bottom: 22px;
+  right: 264px; /* TOC width (240) + 24px gutter */
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  background: rgba(245, 241, 232, 0.92);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.07);
+  backdrop-filter: saturate(140%) blur(8px);
+  -webkit-backdrop-filter: saturate(140%) blur(8px);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-mute);
+  pointer-events: none;
+  user-select: none;
+}
+.kindmd-edit-hints[hidden] { display: none; }
+.kindmd-edit-hints kbd {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0;
+  text-transform: none;
+  background: var(--paper-deep);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-right: 4px;
+  color: var(--ink-soft);
+}
+.kindmd-edit-hints-sep { color: var(--rule); }
+/* When the TOC is hidden, hug the right edge of the window. */
+.kindmd-app[data-toc-hidden="true"] ~ .kindmd-edit-hints { right: 24px; }
+@media (max-width: 1100px) {
+  .kindmd-edit-hints { right: 24px; }
+}
+
+
+.kindmd-app-main .kindmd-footer {
+  max-width: none;
+  margin: 0;
+  width: 100%;
+  padding: 16px 24px 22px;
+  border-top: 1px solid var(--rule);
+}
+
+/* ---------- TOC ---------- */
+
+.kindmd-app-toc {
+  background: transparent;
+  border-left: 1px solid var(--rule);
+  padding: 24px 18px;
+  overflow-y: auto;
+  font-size: 12.5px;
+  position: static;
+  max-height: none;
+}
+
+/* ---------- Welcome state ---------- */
+
+.kindmd-app-welcome {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0 0 12px;
+  letter-spacing: -0.018em;
+  color: var(--ink);
+}
+.kindmd-empty kbd {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  background: var(--paper-deep);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: var(--ink-soft);
+}
+
+/* ---------- Scrollbars (subtle) ---------- */
+
+.kindmd-app-tree::-webkit-scrollbar,
+.kindmd-app-main::-webkit-scrollbar,
+.kindmd-app-toc::-webkit-scrollbar { width: 10px; height: 10px; }
+
+.kindmd-app-tree::-webkit-scrollbar-thumb,
+.kindmd-app-main::-webkit-scrollbar-thumb,
+.kindmd-app-toc::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.12);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.kindmd-app-tree::-webkit-scrollbar-thumb:hover,
+.kindmd-app-main::-webkit-scrollbar-thumb:hover,
+.kindmd-app-toc::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.25);
+  background-clip: content-box;
+}
+
+/* ---------- Responsiveness ---------- */
+
+@media (max-width: 900px) {
+  .kindmd-app { grid-template-columns: 220px 1fr 0; }
+  .kindmd-app-toc { display: none; }
+}
+@media (max-width: 640px) {
+  .kindmd-app { grid-template-columns: 0 1fr; }
+  .kindmd-app-sidebar { display: none; }
+}

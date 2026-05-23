@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' file: data:;">
+<title>kindmd</title>
+<link rel="stylesheet" href="../client/styles.css">
+<link rel="stylesheet" href="./app.css">
+</head>
+<body class="kindmd-mode-app">
+<div class="kindmd-app">
+  <!-- Sidebar -->
+  <aside class="kindmd-app-sidebar" data-sidebar>
+    <header class="kindmd-app-sidebar-header">
+      <span class="kindmd-app-sidebar-brand">kind<span class="kindmd-brand-dot">·</span>md</span>
+    </header>
+    <div class="kindmd-app-sidebar-folder">
+      <button class="kindmd-app-folder-btn" type="button" data-open-folder>
+        <span class="kindmd-app-folder-icon" aria-hidden="true">📁</span>
+        <span class="kindmd-app-folder-name" data-folder-name>Open Folder…</span>
+        <span class="kindmd-app-folder-chevron" aria-hidden="true">⌃</span>
+      </button>
+    </div>
+    <nav class="kindmd-app-tree" aria-label="Files" data-tree>
+      <div class="kindmd-app-tree-empty">
+        <p><em>No folder open.</em></p>
+        <button type="button" class="kindmd-app-open-btn" data-open-folder>Open Folder…</button>
+        <button type="button" class="kindmd-app-open-btn kindmd-app-open-btn-secondary" data-open-file>Open File…</button>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Content -->
+  <main class="kindmd-app-main" id="main" tabindex="-1">
+    <header class="kindmd-app-titlebar" data-titlebar>
+      <div class="kindmd-app-titlebar-drag"></div>
+      <div class="kindmd-app-titlebar-inner">
+        <h1 class="kindmd-app-title" data-title>kindmd</h1>
+        <form class="kindmd-search kindmd-app-search" role="search" data-search>
+          <label class="kindmd-visually-hidden" for="kindmd-search-input">Search this document</label>
+          <input id="kindmd-search-input" type="search" placeholder="Search (⌘F)" autocomplete="off" spellcheck="false" data-search-input>
+          <span class="kindmd-search-count" aria-live="polite" data-search-count></span>
+        </form>
+        <button class="kindmd-edit-toggle" type="button" data-edit-toggle aria-pressed="false" aria-label="Toggle edit mode" disabled>
+          <span class="kindmd-edit-icon" aria-hidden="true">✎</span>
+          <span class="kindmd-edit-label" data-edit-label>Edit</span>
+          <span class="kindmd-edit-dirty" data-edit-dirty aria-hidden="true" hidden>●</span>
+        </button>
+        <div class="kindmd-app-tools">
+          <button class="kindmd-export" type="button" data-export aria-label="Export as HTML">Export</button>
+        </div>
+      </div>
+    </header>
+    <article class="kindmd-article" data-article>
+      <div class="kindmd-empty">
+        <h2 class="kindmd-app-welcome">Welcome to kindmd.</h2>
+        <p>Open a folder in the sidebar or press <kbd>⌘O</kbd> to start reading.</p>
+      </div>
+    </article>
+    <section class="kindmd-edit-pane" data-edit-pane hidden aria-label="Markdown editor">
+      <textarea class="kindmd-edit-textarea" data-edit-textarea spellcheck="false" autocapitalize="off" autocorrect="off" wrap="soft"></textarea>
+    </section>
+    <footer class="kindmd-footer" data-footer style="display:none">
+      <span class="kindmd-footer-path" data-footer-path></span>
+      <span class="kindmd-footer-sep" aria-hidden="true">·</span>
+      <span class="kindmd-footer-modified" data-footer-modified></span>
+    </footer>
+  </main>
+
+  <!-- TOC -->
+  <aside class="kindmd-app-toc kindmd-toc" aria-label="Contents" data-toc-pane>
+    <h2 class="kindmd-toc-title">Contents</h2>
+    <div data-toc>
+      <p class="kindmd-toc-empty"><em>No document.</em></p>
+    </div>
+  </aside>
+</div>
+
+<div class="kindmd-context-menu" data-context-menu role="menu" hidden>
+  <button type="button" role="menuitem" data-action="open-in-claude-code">
+    <span class="kindmd-cm-icon" aria-hidden="true">⌘</span>
+    <span>Open in Claude Code</span>
+  </button>
+  <div class="kindmd-cm-sep" role="separator"></div>
+  <button type="button" role="menuitem" data-action="reveal-in-finder">
+    <span class="kindmd-cm-icon" aria-hidden="true">📁</span>
+    <span>Reveal in Finder</span>
+  </button>
+  <button type="button" role="menuitem" data-action="copy-path">
+    <span class="kindmd-cm-icon" aria-hidden="true">¶</span>
+    <span>Copy Path</span>
+  </button>
+</div>
+
+<div class="kindmd-edit-hints" data-edit-hints hidden aria-hidden="true">
+  <span><kbd>⌘S</kbd> save</span>
+  <span class="kindmd-edit-hints-sep" aria-hidden="true">·</span>
+  <span><kbd>Esc</kbd> done</span>
+</div>
+
+<script src="./app.js"></script>
+</body>
+</html>

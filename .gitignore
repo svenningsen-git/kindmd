@@ -1,0 +1,22 @@
+node_modules/
+*.log
+.DS_Store
+dist/
+build/icon.iconset/
+build/icon-*.png
+build/icon.svg.png
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS metadata
+Thumbs.db
+ehthumbs.db
+
+# Local env / secrets
+.env
+.env.*
+!.env.example

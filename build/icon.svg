@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F5F1E8"/>
+      <stop offset="100%" stop-color="#EBE5D4"/>
+    </linearGradient>
+  </defs>
+  <!-- Rounded square base. macOS will auto-mask, but we provide the curve too. -->
+  <rect x="0" y="0" width="1024" height="1024" rx="224" ry="224" fill="url(#paper)"/>
+  <!-- Subtle inner border -->
+  <rect x="32" y="32" width="960" height="960" rx="200" ry="200"
+        fill="none" stroke="#D9D2C2" stroke-width="3"/>
+  <!-- The mark: a heavy oxblood lower-case "k" with a paragraph mark below -->
+  <g transform="translate(512, 540)">
+    <text x="0" y="0"
+          font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif"
+          font-size="640"
+          font-weight="700"
+          letter-spacing="-0.06em"
+          fill="#6B2737"
+          text-anchor="middle"
+          dominant-baseline="central">k</text>
+  </g>
+  <!-- Editorial section mark -->
+  <text x="512" y="860"
+        font-family="ui-monospace, 'SF Mono', SFMono-Regular, Menlo, monospace"
+        font-size="86"
+        font-weight="500"
+        letter-spacing="0.18em"
+        fill="#6B2737"
+        text-anchor="middle">·md</text>
+</svg>
