@@ -22,6 +22,7 @@
   const searchInput = $("[data-search-input]");
   const searchCount = $("[data-search-count]");
   const exportBtn = $("[data-export]");
+  const copyDocBtn = $("[data-copy-doc]");
   const editToggleBtn = $("[data-edit-toggle]");
   const editLabel = $("[data-edit-label]");
   const editDirtyDot = $("[data-edit-dirty]");
@@ -469,6 +470,7 @@
     wireInternalLinks();
     rebuildTocObserver();
     highlightActiveInTree();
+    updateActionButton();
 
     kindmd.watchFile(filePath);
 
@@ -512,6 +514,7 @@
 
     document.body.classList.add("kindmd-csv-active");
     if (editToggleBtn) editToggleBtn.disabled = true; // no edit mode for CSV (v1)
+    updateActionButton();
 
     titleEl.textContent = doc.title;
     document.title = `${doc.title} — kindmd`;
@@ -1685,13 +1688,19 @@
   // ---------- Export (read mode) / Save As… (edit mode) ----------
 
   function updateActionButton() {
-    if (!exportBtn) return;
-    if (state.editMode) {
-      exportBtn.textContent = "Save as…";
-      exportBtn.setAttribute("aria-label", "Save markdown as a new file");
-    } else {
-      exportBtn.textContent = "Export";
-      exportBtn.setAttribute("aria-label", "Export as HTML");
+    if (exportBtn) {
+      if (state.editMode) {
+        exportBtn.textContent = "Save as…";
+        exportBtn.setAttribute("aria-label", "Save markdown as a new file");
+      } else {
+        exportBtn.textContent = "Export";
+        exportBtn.setAttribute("aria-label", "Export as HTML");
+      }
+    }
+    if (copyDocBtn) {
+      // Copy-for-docs only makes sense for a rendered markdown article in
+      // read mode — not the CSV grid or the raw editor.
+      copyDocBtn.hidden = !(state.currentDoc && state.currentFileKind === "md" && !state.editMode);
     }
   }
 
@@ -1700,6 +1709,26 @@
     else if (state.currentFileKind === "csv") exportCsvCurrent();
     else exportCurrent();
   });
+
+  if (copyDocBtn) copyDocBtn.addEventListener("click", () => copyForDocs());
+
+  // ---------- Copy formatted content for Google Docs ----------
+  // Produces a white-background / black-text HTML fragment stripped of the
+  // interactive affordances (collapse toggles, anchor permalinks) so it pastes
+  // cleanly into Google Docs, Word, and similar editors.
+  async function copyForDocs() {
+    if (!state.currentDoc || state.currentFileKind !== "md" || state.editMode) return;
+    const tmp = document.createElement("div");
+    tmp.innerHTML = state.currentDoc.html;
+    tmp
+      .querySelectorAll(".kindmd-section-toggle, .kindmd-anchor, .kindmd-table-copy, .kindmd-color-swatch")
+      .forEach((el) => el.remove());
+    const html =
+      `<div style="background:#ffffff;color:#000000;">${tmp.innerHTML}</div>`;
+    const text = tmp.textContent.replace(/\n{3,}/g, "\n\n").trim();
+    await kindmd.copyRichToClipboard({ html, text });
+    flashMessage("Copied — paste into Google Docs");
+  }
 
   async function exportCsvCurrent() {
     if (!state.csv) return;
