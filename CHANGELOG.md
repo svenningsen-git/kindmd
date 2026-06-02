@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added — Copy for Google Docs
+- **Copy** button next to Export in the markdown reader. Copies the rendered article to the clipboard as formatted HTML — headings, lists, tables, bold/italic, and links survive a paste into Google Docs, Word, or similar.
+- The copied content is normalised to a white background with black text (no cream paper / oxblood theme) and has its interactive affordances stripped (collapse/expand toggles, heading anchor permalinks).
+
 ### Added — CSV / TSV reader mode
 - Open `.csv` and `.tsv` files directly — kindmd registers as the default macOS handler for both via `LSSetDefaultRoleHandlerForContentType`.
 - Excel-style grid: column letters (`A`, `B`, `C` …) above the headers, sticky frozen header row, sticky bold first column, row-number gutter.

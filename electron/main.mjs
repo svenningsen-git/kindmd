@@ -487,6 +487,16 @@ ipcMain.handle("copy-to-clipboard", async (_event, text) => {
   return { ok: true };
 });
 
+// Rich clipboard write: HTML flavor (for formatted paste into Google Docs,
+// Word, etc.) plus a plain-text fallback for editors that ignore HTML.
+ipcMain.handle("copy-rich-to-clipboard", async (_event, { html, text } = {}) => {
+  const payload = {};
+  if (typeof html === "string") payload.html = html;
+  if (typeof text === "string") payload.text = text;
+  if (Object.keys(payload).length) clipboard.write(payload);
+  return { ok: true };
+});
+
 /**
  * Open a new Terminal window at the given folder and run the `claude`
  * CLI (Claude Code). Uses osascript so the Terminal app's "do script"

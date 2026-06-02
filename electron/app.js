@@ -22,6 +22,7 @@
   const searchInput = $("[data-search-input]");
   const searchCount = $("[data-search-count]");
   const exportBtn = $("[data-export]");
+  const copyDocBtn = $("[data-copy-doc]");
   const editToggleBtn = $("[data-edit-toggle]");
   const editLabel = $("[data-edit-label]");
   const editDirtyDot = $("[data-edit-dirty]");
@@ -469,6 +470,7 @@
     wireInternalLinks();
     rebuildTocObserver();
     highlightActiveInTree();
+    updateActionButton();
 
     kindmd.watchFile(filePath);
 
@@ -512,6 +514,7 @@
 
     document.body.classList.add("kindmd-csv-active");
     if (editToggleBtn) editToggleBtn.disabled = true; // no edit mode for CSV (v1)
+    updateActionButton();
 
     titleEl.textContent = doc.title;
     document.title = `${doc.title} — kindmd`;
@@ -1685,13 +1688,19 @@
   // ---------- Export (read mode) / Save As… (edit mode) ----------
 
   function updateActionButton() {
-    if (!exportBtn) return;
-    if (state.editMode) {
-      exportBtn.textContent = "Save as…";
-      exportBtn.setAttribute("aria-label", "Save markdown as a new file");
-    } else {
-      exportBtn.textContent = "Export";
-      exportBtn.setAttribute("aria-label", "Export as HTML");
+    if (exportBtn) {
+      if (state.editMode) {
+        exportBtn.textContent = "Save as…";
+        exportBtn.setAttribute("aria-label", "Save markdown as a new file");
+      } else {
+        exportBtn.textContent = "Export";
+        exportBtn.setAttribute("aria-label", "Export as HTML");
+      }
+    }
+    if (copyDocBtn) {
+      // Copy-for-docs only makes sense for a rendered markdown article in
+      // read mode — not the CSV grid or the raw editor.
+      copyDocBtn.hidden = !(state.currentDoc && state.currentFileKind === "md" && !state.editMode);
     }
   }
 
@@ -1700,6 +1709,66 @@
     else if (state.currentFileKind === "csv") exportCsvCurrent();
     else exportCurrent();
   });
+
+  if (copyDocBtn) copyDocBtn.addEventListener("click", () => copyForDocs());
+
+  // ---------- Copy formatted content for Google Docs ----------
+  // Produces a strictly black-on-white, rich-text HTML fragment that pastes
+  // cleanly into Google Docs, Word, and similar editors:
+  //   • Content + rich formatting preserved (headings, bold/italic, lists,
+  //     tables, links, code) as semantic HTML.
+  //   • Interactive / decorative affordances removed (collapse toggles,
+  //     anchor permalinks, table-copy pills, colour swatches).
+  //   • White background only, black text — every inline colour / background
+  //     from the editorial theme is stripped so nothing tints the paste.
+  async function copyForDocs() {
+    if (!state.currentDoc || state.currentFileKind !== "md" || state.editMode) return;
+    const tmp = document.createElement("div");
+    tmp.innerHTML = state.currentDoc.html;
+
+    // 1. Remove affordances that don't belong in a document.
+    tmp
+      .querySelectorAll(".kindmd-section-toggle, .kindmd-anchor, .kindmd-table-copy, .kindmd-color-swatch")
+      .forEach((el) => el.remove());
+
+    // 2. Strip every inline colour / background so the result is strictly
+    //    black-on-white. (Column alignment, font-weight, etc. are kept.)
+    tmp.querySelectorAll("[style]").forEach((el) => {
+      el.style.removeProperty("color");
+      el.style.removeProperty("background");
+      el.style.removeProperty("background-color");
+    });
+
+    // 3. Keep code monospaced — Prism uses CSS classes, which Google Docs drops
+    //    on paste, so re-assert the font inline (no fill, stays white).
+    tmp.querySelectorAll("pre, code").forEach((el) => {
+      el.style.fontFamily = "ui-monospace, Menlo, Consolas, monospace";
+      el.style.whiteSpace = "pre-wrap";
+    });
+
+    // 4. Re-apply document-friendly table styling inline (classes are dropped
+    //    on paste): grid lines on every cell + a bold, underlined header row.
+    //    No fill — the header stays white per the black-on-white rule.
+    tmp.querySelectorAll("table").forEach((table) => {
+      table.style.borderCollapse = "collapse";
+      table.style.border = "1px solid #999999";
+      table.querySelectorAll("th, td").forEach((cell) => {
+        cell.style.border = "1px solid #999999";
+        cell.style.padding = "6px 10px";
+        cell.style.verticalAlign = "top";
+        if (!cell.style.textAlign) cell.style.textAlign = "left"; // keep column alignment
+      });
+      table.querySelectorAll("th").forEach((th) => {
+        th.style.fontWeight = "bold";
+        th.style.borderBottom = "2px solid #333333"; // distinguish header without a fill
+      });
+    });
+
+    const html = `<div style="background:#ffffff;color:#000000;">${tmp.innerHTML}</div>`;
+    const text = tmp.textContent.replace(/\n{3,}/g, "\n\n").trim();
+    await kindmd.copyRichToClipboard({ html, text });
+    flashMessage("Copied — paste into Google Docs");
+  }
 
   async function exportCsvCurrent() {
     if (!state.csv) return;

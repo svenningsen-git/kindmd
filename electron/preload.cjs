@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld("kindmd", {
   renameFile: (oldPath, newName) => ipcRenderer.invoke("rename-file", oldPath, newName),
   saveMdAs: (payload) => ipcRenderer.invoke("save-md-as", payload),
   copyToClipboard: (text) => ipcRenderer.invoke("copy-to-clipboard", text),
+  copyRichToClipboard: (payload) => ipcRenderer.invoke("copy-rich-to-clipboard", payload),
   openFolderInClaudeCode: (folderPath) => ipcRenderer.invoke("open-folder-in-claude-code", folderPath),
   showInFinder: (path) => ipcRenderer.invoke("show-in-finder", path),
   openExternal: (url) => ipcRenderer.invoke("open-external", url),

@@ -75,6 +75,7 @@ kindmd --help                   # print usage
 - Collapsible H2 sections
 - Excel-like CSV viewer (sort, filter, freeze, copy-as-TSV)
 - Self-contained HTML export
+- **Copy** for Google Docs — formatted content (white background, black text, no collapse controls) straight to the clipboard
 - WCAG 2.1 AA accessible
 - Zero external network requests
 - Zero configuration
