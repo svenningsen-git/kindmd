@@ -1,6 +1,6 @@
 # kindmd
 
-> An editorial markdown reader (and Excel-like CSV viewer) for macOS. Markdown becomes a thoughtfully designed editorial page; CSV becomes a sortable, filterable spreadsheet — both via a fixed set of deterministic rules.
+> An editorial reader & editor for macOS. Markdown becomes a thoughtfully designed editorial page; CSV becomes a sortable, filterable spreadsheet; and HTML reads like a browser with in-place editing and margin comments (**Marginalia**) that save straight back into the file.
 
 ## Install as a Mac app
 
@@ -10,7 +10,7 @@ npm run dist          # build the .app bundle
 npm run install-app   # copy to /Applications, sign, register as default handler
 ```
 
-`install-app` registers kindmd as the default opener for `.md`, `.markdown`, `.mdown`, `.mkd`, `.csv`, and `.tsv`. Double-click any of those files in Finder and they open here.
+`install-app` registers kindmd as the default opener for `.md`, `.markdown`, `.mdown`, `.mkd`, `.csv`, and `.tsv`, and as an alternate opener for `.html` / `.htm` (so your browser stays the default — use **Open With → kindmd** or drag the file onto the app). Double-click a registered file in Finder and it opens here.
 
 For day-to-day dev (no install required):
 
@@ -38,13 +38,24 @@ npm run app
 - **Columns ▾** dropdown in the toolbar — show / hide any column
 - The global search box acts as a row filter across visible columns
 
+### HTML mode — Marginalia
+
+Open an `.html` / `.htm` file and it renders like a browser inside a document card, with a comment gutter alongside — great for reviewing AI-generated HTML output.
+
+- **Read / Edit** toggle in the toolbar (or `⌘E`)
+- **Edit in place** — in Edit mode, click any text block to edit it directly. Plain text only: rich-formatting shortcuts are blocked, paste is de-formatted, and `Enter` commits.
+- **Margin comments** — select any text and click the floating **💬 Comment** button. A highlight is dropped in the document and a note card appears in the gutter, pinned next to the selection. Resolve, reopen, or delete from the card.
+- **Saved into the file itself** — comments persist as `[data-comment-id]` highlight spans plus a `<section id="__doc-comments">` appended to the document, so annotations travel with the file and rehydrate when you reopen it. `⌘S` (or the **Save** button) writes straight back to disk.
+- **Show / hide comments** collapses the gutter to read the document full-width.
+- The page's own scripts are **not executed** (the document is rendered for reading and annotating, not running); its CSS renders fully.
+
 ### Keyboard shortcuts
 
 - `⌘O` — Open Folder…
 - `⌘⇧O` — Open File…
 - `⌘F` / `⌘K` — Focus search (markdown: highlight matches · CSV: filter rows)
-- `⌘E` — Toggle edit mode (markdown only)
-- `⌘S` — Save (edit mode)
+- `⌘E` — Toggle edit mode (markdown source · HTML in-place)
+- `⌘S` — Save (markdown edit mode · HTML any time)
 - `⌘\` — Toggle sidebar
 - `⌘⇧T` — Toggle TOC pane
 - `⌘R` — Reveal current file in Finder

@@ -41,11 +41,30 @@ body.kindmd-csv-active .kindmd-app { grid-template-columns: 260px 1fr; }
 body.kindmd-csv-active .kindmd-app[data-sidebar-hidden="true"] { grid-template-columns: 0 1fr; }
 body.kindmd-csv-active .kindmd-app-toc { display: none; }
 
+/* HTML / Marginalia mode: the comment gutter replaces the TOC pane, and the
+   search box / markdown-edit toggle / export button give way to HTML tools. */
+body.kindmd-html-active .kindmd-app { grid-template-columns: 260px 1fr; }
+body.kindmd-html-active .kindmd-app[data-sidebar-hidden="true"] { grid-template-columns: 0 1fr; }
+body.kindmd-html-active .kindmd-app-toc { display: none; }
+body.kindmd-html-active .kindmd-app-search { display: none; }
+body.kindmd-html-active .kindmd-edit-toggle { display: none; }
+body.kindmd-html-active .kindmd-app-tools { display: none; }
+
+/* Reading surfaces per mode: markdown keeps warm paper; CSV is white; HTML sits
+   on a soft neutral stage so the white document card reads as a page. Titlebars
+   follow suit (white over CSV/HTML, paper over markdown). */
+body.kindmd-csv-active .kindmd-app-main { background: #fff; }
+body.kindmd-html-active .kindmd-app-main { background: #f6f6f5; }
+body.kindmd-csv-active .kindmd-app-titlebar,
+body.kindmd-html-active .kindmd-app-titlebar {
+  background: rgba(255, 255, 255, 0.86);
+}
+
 /* ---------- Sidebar (Finder-style) ---------- */
 
 .kindmd-app-sidebar {
-  /* Solid warm paper tone — matches the editorial palette across panes */
-  background: #F2EEE5;
+  /* White navigation chrome — a clean shell around the editorial reading surface */
+  background: #fff;
   border-right: 1px solid var(--rule);
   display: flex;
   flex-direction: column;
@@ -67,7 +86,7 @@ body.kindmd-csv-active .kindmd-app-toc { display: none; }
 }
 
 .kindmd-app-sidebar-brand {
-  color: var(--oxblood);
+  color: var(--ink);
   font-weight: 600;
   letter-spacing: 0.04em;
 }
@@ -137,7 +156,7 @@ body.kindmd-csv-active .kindmd-app-toc { display: none; }
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--oxblood);
+  color: var(--ink);
   background: transparent;
   border: 1px solid var(--rule);
   padding: 6px 12px;
@@ -148,7 +167,7 @@ body.kindmd-csv-active .kindmd-app-toc { display: none; }
   width: 80%;
   transition: border-color 0.12s ease, background 0.12s ease;
 }
-.kindmd-app-open-btn:hover { border-color: var(--oxblood); background: var(--paper-deep); }
+.kindmd-app-open-btn:hover { border-color: var(--ink); background: rgba(0, 0, 0, 0.04); }
 .kindmd-app-open-btn-secondary { color: var(--ink-mute); }
 
 /* Tree items */
@@ -177,11 +196,11 @@ body.kindmd-csv-active .kindmd-app-toc { display: none; }
 }
 .kindmd-app-tree-row:hover { background: rgba(0,0,0,0.04); }
 .kindmd-app-tree-row.is-active {
-  background: var(--oxblood);
-  color: var(--paper);
+  background: var(--ink);
+  color: #fff;
 }
 .kindmd-app-tree-row.is-active .kindmd-app-tree-chevron,
-.kindmd-app-tree-row.is-active .kindmd-app-tree-icon { color: var(--paper); }
+.kindmd-app-tree-row.is-active .kindmd-app-tree-icon { color: #fff; }
 
 .kindmd-app-tree-row.is-disabled {
   color: var(--ink-mute);
@@ -217,13 +236,14 @@ body.kindmd-csv-active .kindmd-app-toc { display: none; }
   color: var(--ink-mute);
   flex-shrink: 0;
 }
-.kindmd-app-tree-row.is-md .kindmd-app-tree-icon { color: var(--oxblood); }
+.kindmd-app-tree-row.is-md .kindmd-app-tree-icon { color: var(--ink); }
 .kindmd-app-tree-row.is-csv .kindmd-app-tree-icon {
   color: var(--ink-soft);
   font-size: 12px;
   letter-spacing: -1px;
 }
-.kindmd-app-tree-row.is-active .kindmd-app-tree-icon { color: var(--paper); }
+.kindmd-app-tree-row.is-html .kindmd-app-tree-icon { color: var(--ink-soft); }
+.kindmd-app-tree-row.is-active .kindmd-app-tree-icon { color: #fff; }
 
 .kindmd-app-tree-label {
   flex: 1;
@@ -233,8 +253,9 @@ body.kindmd-csv-active .kindmd-app-toc { display: none; }
   white-space: nowrap;
 }
 .kindmd-app-tree-row.is-md .kindmd-app-tree-label,
-.kindmd-app-tree-row.is-csv .kindmd-app-tree-label { color: var(--ink); }
-.kindmd-app-tree-row.is-active .kindmd-app-tree-label { color: var(--paper); font-weight: 500; }
+.kindmd-app-tree-row.is-csv .kindmd-app-tree-label,
+.kindmd-app-tree-row.is-html .kindmd-app-tree-label { color: var(--ink); }
+.kindmd-app-tree-row.is-active .kindmd-app-tree-label { color: #fff; font-weight: 500; }
 
 .kindmd-app-tree ul ul {
   padding-left: 16px;
@@ -275,8 +296,8 @@ body.kindmd-csv-active .kindmd-app-toc { display: none; }
 }
 .kindmd-context-menu button:hover,
 .kindmd-context-menu button:focus-visible {
-  background: var(--oxblood);
-  color: var(--paper);
+  background: var(--ink);
+  color: #fff;
 }
 .kindmd-cm-icon {
   display: inline-block;
@@ -287,7 +308,7 @@ body.kindmd-csv-active .kindmd-app-toc { display: none; }
   flex-shrink: 0;
 }
 .kindmd-context-menu button:hover .kindmd-cm-icon,
-.kindmd-context-menu button:focus-visible .kindmd-cm-icon { color: var(--paper); }
+.kindmd-context-menu button:focus-visible .kindmd-cm-icon { color: #fff; }
 .kindmd-cm-sep {
   height: 1px;
   background: var(--rule);
@@ -298,8 +319,8 @@ body.kindmd-csv-active .kindmd-app-toc { display: none; }
 .kindmd-app-tree-rename {
   flex: 1;
   min-width: 0;
-  background: var(--paper);
-  border: 1px solid var(--oxblood);
+  background: #fff;
+  border: 1px solid var(--ink);
   border-radius: 3px;
   padding: 1px 5px;
   margin: 0;
@@ -311,11 +332,11 @@ body.kindmd-csv-active .kindmd-app-toc { display: none; }
   -webkit-app-region: no-drag;
 }
 .kindmd-app-tree-rename:focus {
-  border-color: var(--oxblood);
-  box-shadow: 0 0 0 2px rgba(107, 39, 55, 0.18);
+  border-color: var(--ink);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.14);
 }
-.kindmd-app-tree-row.is-renaming { background: var(--paper-deep); }
-.kindmd-app-tree-row.is-renaming.is-active { background: var(--paper-deep); color: var(--ink); }
+.kindmd-app-tree-row.is-renaming { background: rgba(0, 0, 0, 0.05); }
+.kindmd-app-tree-row.is-renaming.is-active { background: rgba(0, 0, 0, 0.05); color: var(--ink); }
 
 /* ---------- Main pane ---------- */
 
@@ -577,3 +598,211 @@ body.kindmd-csv-active .kindmd-app-toc { display: none; }
   .kindmd-app { grid-template-columns: 0 1fr; }
   .kindmd-app-sidebar { display: none; }
 }
+
+/* ================================================================
+   HTML / Marginalia mode
+   Faithful to the Claude Design "Marginalia.dc.html" prototype:
+   a white document card in the centre, a comment gutter on the right,
+   an in-place text editor, and a floating "Comment" button on select.
+   ================================================================ */
+
+@keyframes mgPop { from { opacity: 0; transform: translateY(4px) scale(.98); } to { opacity: 1; transform: none; } }
+
+.kindmd-html-pane {
+  display: block;
+  flex: 1 0 auto;
+  --mg-gutter: 320px;
+}
+.kindmd-html-pane[hidden] { display: none; }
+
+.kindmd-html-canvas {
+  max-width: calc(760px + 24px + var(--mg-gutter) + 48px);
+  margin: 0 auto;
+  padding: 36px 24px 120px;
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+}
+.kindmd-html-pane.no-comments .kindmd-html-canvas { max-width: 868px; }
+
+.kindmd-html-page {
+  flex: none;
+  width: min(760px, calc(100% - (var(--mg-gutter) + 24px)));
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 30px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+.kindmd-html-pane.no-comments .kindmd-html-page { width: min(820px, 100%); }
+
+.kindmd-html-frame {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: #fff;
+}
+
+.kindmd-html-gutter {
+  flex: none;
+  position: relative;
+  width: var(--mg-gutter);
+}
+.kindmd-html-pane.no-comments .kindmd-html-gutter { display: none; }
+
+.kindmd-html-gutter-hint {
+  position: sticky;
+  top: 8px;
+  padding: 16px 14px;
+  border: 1px dashed rgba(0, 0, 0, 0.14);
+  border-radius: 10px;
+  color: #9a9a94;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+/* ----- comment cards ----- */
+
+.kindmd-mg-card {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  border-radius: 12px;
+  padding: 13px 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: top 0.18s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  z-index: 1;
+  animation: mgPop 0.14s ease;
+}
+.kindmd-mg-card.is-active {
+  border: 1px solid rgba(0, 0, 0, 0.28);
+  border-left: 3px solid var(--ink);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.13);
+  cursor: default;
+  z-index: 5;
+}
+.kindmd-mg-card.is-resolved:not(.is-active) { opacity: 0.6; }
+
+.kindmd-mg-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.kindmd-mg-avatar {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--ink); color: #fff;
+  font-size: 11px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; flex: none;
+}
+.kindmd-mg-author { font-size: 12.5px; font-weight: 600; color: var(--ink); }
+.kindmd-mg-date { font-size: 11.5px; color: #999; }
+.kindmd-mg-spacer { flex: 1; }
+.kindmd-mg-badge {
+  font-size: 10.5px; font-weight: 600; color: #555;
+  background: rgba(0, 0, 0, 0.07); padding: 2px 6px; border-radius: 5px;
+}
+
+.kindmd-mg-quote {
+  font-size: 12px; color: #8a8a82; font-style: italic;
+  padding-left: 9px; border-left: 2px solid #c9c7c1;
+  margin-bottom: 8px; line-height: 1.4;
+  max-height: 44px; overflow: hidden;
+}
+
+.kindmd-mg-ta {
+  width: 100%; min-height: 58px; resize: vertical;
+  border: 1px solid rgba(0, 0, 0, 0.12); border-radius: 8px;
+  padding: 8px 9px; font: inherit; font-size: 13px; line-height: 1.45;
+  color: var(--ink); outline: none; background: #fcfcfb;
+}
+.kindmd-mg-ta:focus { border-color: rgba(0, 0, 0, 0.55); }
+
+.kindmd-mg-actions { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+.kindmd-mg-btn { font: inherit; cursor: pointer; }
+.kindmd-mg-btn-done {
+  height: 30px; padding: 0 13px; border: 0; border-radius: 7px;
+  background: var(--ink); color: #fff; font-size: 12.5px; font-weight: 600;
+}
+.kindmd-mg-btn-resolve {
+  height: 30px; padding: 0 11px; border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 7px; background: #fff; color: var(--ink); font-size: 12.5px;
+}
+.kindmd-mg-btn-del {
+  height: 30px; width: 30px; border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 7px; background: #fff; color: #666; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+}
+.kindmd-mg-btn-del:hover { color: var(--ink); border-color: rgba(0, 0, 0, 0.28); }
+
+.kindmd-mg-preview {
+  font-size: 13px; line-height: 1.45; color: #33332e; white-space: pre-wrap;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
+}
+.kindmd-mg-preview.is-empty { color: #b0b0a8; }
+
+/* ----- floating "Comment" button (appears on text selection) ----- */
+
+.kindmd-html-selbtn {
+  position: fixed; z-index: 60;
+  height: 34px; padding: 0 13px;
+  display: flex; align-items: center; gap: 7px;
+  border: 0; border-radius: 9px;
+  background: var(--ink); color: #fff;
+  font: inherit; font-size: 12.5px; font-weight: 600;
+  cursor: pointer; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
+  animation: mgPop 0.12s ease;
+}
+.kindmd-html-selbtn[hidden] { display: none; }
+.kindmd-html-selbtn-icon { font-size: 14px; }
+
+/* ----- HTML-mode toolbar (Read/Edit · Comments · Save) ----- */
+
+.kindmd-html-tools {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+  display: flex; align-items: center; gap: 8px;
+}
+.kindmd-html-tools[hidden] { display: none; }
+
+.kindmd-html-seg {
+  display: flex; align-items: center; gap: 2px;
+  background: #f0f0f0; border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 9px; padding: 3px;
+}
+.kindmd-html-seg button {
+  height: 28px; padding: 0 14px; border: 0; border-radius: 7px;
+  font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  background: transparent; color: #666;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.kindmd-html-seg button.is-active {
+  background: #fff; color: var(--ink); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.kindmd-html-comments {
+  height: 34px; padding: 0 12px;
+  display: flex; align-items: center; gap: 7px;
+  border: 1px solid rgba(0, 0, 0, 0.14); border-radius: 9px;
+  font: inherit; font-size: 13px; font-weight: 500; cursor: pointer;
+  background: #fff; color: #666;
+}
+.kindmd-html-comments.is-on { background: #f0f0f0; color: var(--ink); }
+.kindmd-html-comments-count {
+  min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+  background: rgba(0, 0, 0, 0.22); color: #fff;
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.kindmd-html-comments.is-on .kindmd-html-comments-count { background: var(--ink); }
+.kindmd-html-comments-count[hidden] { display: none; }
+
+/* Save is a ghost button when clean, and turns solid black when there are
+   unsaved changes — a monochrome stand-in for the prototype's blue state. */
+.kindmd-html-save {
+  height: 34px; padding: 0 15px; border: 1px solid var(--ink); border-radius: 9px;
+  background: #fff; color: var(--ink);
+  font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.kindmd-html-save.is-dirty { background: var(--ink); color: #fff; }
+.kindmd-html-save-dirty { display: none; }

@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.0.0
+
+### Added — HTML mode & Marginalia
+- Open `.html` / `.htm` files: the document renders like a browser inside a centred page card, with a comment gutter alongside — built for reviewing AI-generated HTML.
+- Rendered in a same-origin sandboxed iframe; the page's CSS renders fully while its scripts stay inert (a reader/annotator, not a runner) — a deliberate safety choice given the app's privileged bridge.
+- **Read / Edit** toggle (`⌘E`): in Edit mode, click any text block to edit it in place. Text-only guard rails — rich-format shortcuts blocked, paste de-formatted, `Enter` commits.
+- **Margin comments**: select text → floating **💬 Comment** button → a highlight lands in the document and a note card pins beside it in the gutter. Resolve / reopen / delete per card; cards de-overlap automatically.
+- **Annotations save into the file**: highlight spans (`[data-comment-id]`) plus an appended `<section id="__doc-comments">` — comments travel with the document and rehydrate on reopen. `⌘S` / **Save** writes straight to disk.
+- **Show / hide comments** collapses the gutter for full-width reading.
+- Adapted from the "Marginalia" Claude Design prototype; save-to-disk replaces the prototype's browser download, and the app's file tree replaces its single-file open.
+
+### Changed — unified white/black chrome
+- Sidebar (file navigation) is now white with black text and a black active row (previously warm paper + oxblood).
+- CSV renders on a white surface; HTML sits on a soft neutral stage so the document card reads as a page; the markdown reader keeps its warm paper palette and oxblood editorial accents.
+- The Marginalia UI is fully monochrome to match.
+
 ## Unreleased
 
 ### Added — CSV / TSV reader mode
