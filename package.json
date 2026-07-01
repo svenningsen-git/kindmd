@@ -1,7 +1,7 @@
 {
   "name": "kindmd",
-  "version": "1.0.0",
-  "description": "An editorial markdown reader. Any markdown file becomes a thoughtfully designed editorial page.",
+  "version": "2.0.0",
+  "description": "An editorial reader & editor for Markdown, CSV, and HTML. Markdown becomes a designed page, CSV an Excel-like grid, and HTML reads like a browser with in-place editing and margin comments (Marginalia).",
   "license": "MIT",
   "type": "module",
   "bin": {
@@ -100,6 +100,22 @@
       {
         "ext": "mkd",
         "name": "Markdown Document",
+        "role": "Editor",
+        "rank": "Alternate",
+        "icon": "build/icon.icns"
+      },
+      {
+        "ext": "html",
+        "name": "HTML Document",
+        "description": "HTML document",
+        "role": "Editor",
+        "rank": "Alternate",
+        "icon": "build/icon.icns"
+      },
+      {
+        "ext": "htm",
+        "name": "HTML Document",
+        "description": "HTML document",
         "role": "Editor",
         "rank": "Alternate",
         "icon": "build/icon.icns"

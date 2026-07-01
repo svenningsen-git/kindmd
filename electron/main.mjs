@@ -15,8 +15,8 @@ let watcher = null;
 let lastOpenedFolder = null;
 let lastOpenedFile = null;
 
-// Extensions we know how to open (markdown family + tabular files).
-const SUPPORTED_EXT_RE = /\.(md|markdown|mdown|mkd|csv|tsv)$/i;
+// Extensions we know how to open (markdown family + tabular files + HTML).
+const SUPPORTED_EXT_RE = /\.(md|markdown|mdown|mkd|csv|tsv|html|htm)$/i;
 
 // Pull a supported file path from process.argv if macOS delivered it that way
 // instead of via the open-file event (happens with some launch invocations).
@@ -139,7 +139,7 @@ function createWindow() {
     title: "kindmd",
     titleBarStyle: "hiddenInset",
     trafficLightPosition: { x: 16, y: 18 },
-    backgroundColor: "#F5F1E8",
+    backgroundColor: "#F4F4F4",
     vibrancy: "sidebar",
     visualEffectState: "active",
     show: false,
@@ -298,8 +298,9 @@ async function openFileDialog() {
   const result = await dialog.showOpenDialog(mainWindow, {
     properties: ["openFile"],
     filters: [
-      { name: "Supported", extensions: ["md", "markdown", "mdown", "mkd", "csv", "tsv"] },
+      { name: "Supported", extensions: ["md", "markdown", "mdown", "mkd", "csv", "tsv", "html", "htm"] },
       { name: "Markdown", extensions: ["md", "markdown", "mdown", "mkd"] },
+      { name: "HTML", extensions: ["html", "htm"] },
       { name: "CSV / TSV", extensions: ["csv", "tsv"] },
     ],
     title: "Open a file",
@@ -329,6 +330,7 @@ ipcMain.handle("list-dir", async (_event, dirPath) => {
         isDirectory: e.isDirectory(),
         isMarkdown: !e.isDirectory() && /\.(md|markdown|mdown|mkd)$/i.test(e.name),
         isCsv: !e.isDirectory() && /\.(csv|tsv)$/i.test(e.name),
+        isHtml: !e.isDirectory() && /\.(html|htm)$/i.test(e.name),
         isReadme: !e.isDirectory() && /^readme\.(md|markdown)$/i.test(e.name),
       }))
       .sort((a, b) => {
@@ -382,6 +384,31 @@ ipcMain.handle("render-csv", async (_event, filePath) => {
         title: path.basename(filePath),
         rows,
         separator,
+        modifiedAt: stat.mtime.toISOString(),
+        size: stat.size,
+      },
+    };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle("render-html", async (_event, filePath) => {
+  try {
+    const raw = fs.readFileSync(filePath, "utf8");
+    const stat = fs.statSync(filePath);
+    lastOpenedFile = filePath;
+    // Prefer the document's own <title>; fall back to the filename.
+    let title = path.basename(filePath, path.extname(filePath));
+    const m = raw.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    if (m && m[1].trim()) title = m[1].trim().replace(/\s+/g, " ");
+    return {
+      ok: true,
+      doc: {
+        path: filePath,
+        kind: "html",
+        title,
+        raw,
         modifiedAt: stat.mtime.toISOString(),
         size: stat.size,
       },
@@ -469,6 +496,22 @@ ipcMain.handle("write-md", async (_event, filePath, content) => {
   try {
     // Pause our own watcher around the write so we don't bounce ourselves
     // into a re-render of stale content the user just edited away from.
+    if (watcher) { watcher.close(); watcher = null; }
+    fs.writeFileSync(filePath, content, "utf8");
+    const stat = fs.statSync(filePath);
+    return { ok: true, modifiedAt: stat.mtime.toISOString(), size: stat.size };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle("write-file", async (_event, filePath, content) => {
+  if (!filePath || typeof content !== "string") {
+    return { ok: false, error: "Invalid arguments" };
+  }
+  try {
+    // Pause our own watcher around the write so saving back to disk doesn't
+    // bounce us into a reload of content we just serialized.
     if (watcher) { watcher.close(); watcher = null; }
     fs.writeFileSync(filePath, content, "utf8");
     const stat = fs.statSync(filePath);

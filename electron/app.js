@@ -22,8 +22,9 @@
   const searchInput = $("[data-search-input]");
   const searchCount = $("[data-search-count]");
   const exportBtn = $("[data-export]");
-  const editToggleBtn = $("[data-edit-toggle]");
-  const editLabel = $("[data-edit-label]");
+  const mdSeg = $("[data-md-seg]");
+  const mdReadBtn = $("[data-md-read]");
+  const mdEditBtn = $("[data-md-edit]");
   const editDirtyDot = $("[data-edit-dirty]");
   const editPane = $("[data-edit-pane]");
   const editTextarea = $("[data-edit-textarea]");
@@ -31,6 +32,22 @@
   const footerEl = $("[data-footer]");
   const footerPath = $("[data-footer-path]");
   const footerModified = $("[data-footer-modified]");
+
+  // HTML / Marginalia mode
+  const htmlPane = $("[data-html-pane]");
+  const htmlCanvas = $("[data-html-canvas]");
+  const htmlFrame = $("[data-html-frame]");
+  const htmlGutter = $("[data-html-gutter]");
+  const htmlGutterHint = $("[data-html-gutter-hint]");
+  const htmlTools = $("[data-html-tools]");
+  const htmlReadBtn = $("[data-html-read]");
+  const htmlEditBtn = $("[data-html-edit]");
+  const htmlCommentsBtn = $("[data-html-comments]");
+  const htmlCommentsLabel = $("[data-html-comments-label]");
+  const htmlCommentCount = $("[data-html-comment-count]");
+  const htmlSaveBtn = $("[data-html-save]");
+  const htmlDirtyDot = $("[data-html-dirty]");
+  const htmlSelBtn = $("[data-html-selbtn]");
 
   // ---------- State ----------
   const state = {
@@ -46,11 +63,13 @@
     treeCollapsedMap: lsGet("kindmd:app:tree-collapsed", {}),
     sectionCollapseByFile: lsGet("kindmd:app:section-collapsed", {}),
     csv: null, // { rows, headers, hiddenCols:Set, filters:Map, sortBy, textFilter }
+    html: null, // { comments:[], editMode, showComments, docHeight, pendingRange, activeTA }
   };
 
   function fileKindOf(path) {
     if (!path) return null;
     if (/\.(csv|tsv)$/i.test(path)) return "csv";
+    if (/\.(html|htm)$/i.test(path)) return "html";
     if (/\.(md|markdown|mdown|mkd)$/i.test(path)) return "md";
     return null;
   }
@@ -224,9 +243,9 @@
       const row = document.createElement("div");
       row.className = "kindmd-app-tree-row";
       row.dataset.filePath = item.path;
-      if (item.isMarkdown || item.isCsv) {
-        const icon = item.isCsv ? "▦" : "¶";
-        row.classList.add(item.isCsv ? "is-csv" : "is-md");
+      if (item.isMarkdown || item.isCsv || item.isHtml) {
+        const icon = item.isCsv ? "▦" : item.isHtml ? "◇" : "¶";
+        row.classList.add(item.isCsv ? "is-csv" : item.isHtml ? "is-html" : "is-md");
         row.innerHTML =
           `<span class="kindmd-app-tree-chevron-spacer" aria-hidden="true"></span>` +
           `<span class="kindmd-app-tree-icon" aria-hidden="true">${icon}</span>` +
@@ -433,6 +452,15 @@
     if (state.editMode && state.currentFile !== filePath) {
       await exitEditMode();
     }
+    // Leaving an HTML doc for a different file: persist unsaved marginalia first,
+    // then tear the iframe/gutter down so it can't leak into the next document.
+    if (state.currentFileKind === "html" && state.currentFile && state.currentFile !== filePath) {
+      if (state.dirty) await htmlSave({ silent: true });
+      htmlTeardown();
+    }
+    if (kind === "html") {
+      return loadHtmlDocument(filePath, opts);
+    }
     if (kind === "csv") {
       return loadCsvDocument(filePath, opts);
     }
@@ -450,8 +478,11 @@
     state.csv = null;
     state.dirty = false;
     setDirtyIndicator(false);
-    if (editToggleBtn) editToggleBtn.disabled = false;
+    if (mdSeg) mdSeg.hidden = false;
+    if (mdReadBtn) mdReadBtn.classList.add("is-active");
+    if (mdEditBtn) mdEditBtn.classList.remove("is-active");
     document.body.classList.remove("kindmd-csv-active");
+    document.body.classList.remove("kindmd-html-active");
 
     titleEl.textContent = doc.title;
     document.title = `${doc.title} — kindmd`;
@@ -511,7 +542,8 @@
     };
 
     document.body.classList.add("kindmd-csv-active");
-    if (editToggleBtn) editToggleBtn.disabled = true; // no edit mode for CSV (v1)
+    document.body.classList.remove("kindmd-html-active");
+    if (mdSeg) mdSeg.hidden = true; // CSV is view-only — no Read/Edit control
 
     titleEl.textContent = doc.title;
     document.title = `${doc.title} — kindmd`;
@@ -982,6 +1014,696 @@
     if (titleEl2) titleEl2.textContent = "Contents";
   }
 
+  // ==================================================================
+  //  HTML mode — Marginalia
+  //  Read an .html file like a browser, edit its text in place, and leave
+  //  margin comments. Comments + edits save straight back into the file
+  //  ([data-comment-id] highlight spans + a <section id="__doc-comments">),
+  //  so annotations travel with the document and rehydrate on reopen.
+  //  Logic ported from the Claude Design "Marginalia.dc.html" prototype;
+  //  adapted from its React/DCLogic form to kindmd's imperative renderer.
+  // ==================================================================
+
+  const MG_HL = "#c9c7c1";               // highlight rule (neutral grey — monochrome)
+  const MG_HL_SOFT = "rgba(0,0,0,.12)";  // highlight fill on the in-doc span
+  const MG_AUTHOR = "You";
+
+  function htmlDocOf() { return htmlFrame && htmlFrame.contentDocument; }
+
+  function mgNewId() {
+    return "c" + Date.now().toString(36) + Math.floor(Math.random() * 900 + 100);
+  }
+  function mgEsc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function mgDateLabel() {
+    return new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  }
+  // Ids are self-generated (safe chars), but look spans up by iteration to
+  // sidestep any attribute-selector escaping concerns with rehydrated ids.
+  function mgFindSpan(doc, id) {
+    if (!doc) return null;
+    const list = doc.querySelectorAll("[data-comment-id]");
+    for (const el of list) if (el.getAttribute("data-comment-id") === id) return el;
+    return null;
+  }
+
+  async function loadHtmlDocument(filePath) {
+    const res = await kindmd.renderHtml(filePath);
+    if (!res || !res.ok) {
+      document.body.classList.remove("kindmd-html-active");
+      htmlPane.hidden = true;
+      articleEl.hidden = false;
+      articleEl.innerHTML = `<div class="kindmd-empty"><p class="kindmd-error">Failed to load <code>${escapeHtml(filePath)}</code>.${res?.error ? ` ${escapeHtml(res.error)}` : ""}</p></div>`;
+      return;
+    }
+    const doc = res.doc;
+    state.currentFile = filePath;
+    state.currentFileKind = "html";
+    state.currentDoc = doc;
+    state.currentRaw = doc.raw || "";
+    state.csv = null;
+    state.editMode = false; // the markdown edit flag stays off in HTML mode
+    state.dirty = false;
+    state.html = {
+      comments: [], editMode: false, showComments: true,
+      docHeight: 400, pendingRange: null,
+    };
+
+    // Swap the view into HTML mode.
+    document.body.classList.remove("kindmd-csv-active");
+    document.body.classList.add("kindmd-html-active");
+    articleEl.hidden = true;
+    editPane.hidden = true;
+    if (mdSeg) mdSeg.hidden = true;
+    if (htmlTools) htmlTools.hidden = false;
+    htmlPane.hidden = false;
+    htmlPane.classList.remove("no-comments");
+    if (footerEl) footerEl.style.display = "";
+
+    titleEl.textContent = doc.title;
+    document.title = `${doc.title} — kindmd`;
+    footerPath.textContent = doc.path;
+    footerModified.textContent = formatModified(doc.modifiedAt);
+
+    htmlSetMode(false);
+    updateHtmlCommentsBtn();
+    setHtmlDirty(false);
+    hideSelBtn();
+
+    // Search is disabled in HTML mode — clear any leftover state/marks.
+    state.searchMatches = []; state.searchIndex = -1;
+    if (searchInput) searchInput.value = "";
+    if (searchCount) { searchCount.textContent = ""; searchCount.classList.remove("is-empty"); }
+
+    highlightActiveInTree();
+
+    htmlFrame.onload = () => htmlWireIframe();
+    htmlFrame.srcdoc = doc.raw || "<!DOCTYPE html><html><body></body></html>";
+
+    kindmd.watchFile(filePath);
+
+    const mainEl = document.querySelector(".kindmd-app-main");
+    if (mainEl) mainEl.scrollTop = 0;
+  }
+
+  function htmlWireIframe() {
+    const doc = htmlDocOf();
+    if (!doc) return;
+    // Editor chrome — hover hints + contenteditable/highlight styling. Stripped on save.
+    let st = doc.getElementById("__mg-chrome");
+    if (!st) {
+      st = doc.createElement("style");
+      st.id = "__mg-chrome";
+      (doc.head || doc.documentElement).appendChild(st);
+    }
+    st.textContent =
+      "html{cursor:default}" +
+      "body.__mg-edit :where(p,h1,h2,h3,h4,h5,h6,li,td,th,blockquote,figcaption,a,span,dt,dd):hover{outline:1.5px dashed rgba(0,0,0,.4);outline-offset:2px;border-radius:2px;cursor:text}" +
+      '[contenteditable="true"]{outline:2px solid #1a1a1a !important;outline-offset:2px;background:rgba(0,0,0,.05);border-radius:2px}' +
+      "[data-comment-id]{cursor:pointer;transition:background .12s}" +
+      "[data-comment-id].__mg-active{outline:1px solid rgba(0,0,0,.28)}" +
+      ".__mg-search{background:rgba(0,0,0,.12);border-radius:1px}" +
+      ".__mg-search.__mg-cur{background:rgba(0,0,0,.32);outline:2px solid #1a1a1a;outline-offset:1px}";
+
+    const comments = htmlRehydrate(doc);
+
+    doc.addEventListener("click", htmlDocClick);
+    doc.addEventListener("focusout", htmlDocFocusOut);
+    doc.addEventListener("mouseup", htmlDocMouseUp);
+    doc.addEventListener("input", () => setHtmlDirty(true));
+    // Text-only guard rails: no rich formatting, plain-text paste, Enter commits.
+    doc.addEventListener("beforeinput", (e) => {
+      if (e.target && e.target.isContentEditable && e.inputType && e.inputType.indexOf("format") === 0) e.preventDefault();
+    });
+    doc.addEventListener("paste", (e) => {
+      if (!(e.target && e.target.isContentEditable)) return;
+      e.preventDefault();
+      const txt = (e.clipboardData || window.clipboardData).getData("text/plain");
+      doc.execCommand("insertText", false, txt);
+    });
+    doc.addEventListener("keydown", (e) => {
+      if (!(e.target && e.target.isContentEditable)) return;
+      const k = (e.key || "").toLowerCase();
+      if ((e.metaKey || e.ctrlKey) && (k === "b" || k === "i" || k === "u")) { e.preventDefault(); return; }
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        const t = e.target; t.blur(); t.removeAttribute("contenteditable");
+        htmlReflow();
+      }
+    });
+
+    state.html.comments = comments;
+    htmlApplyEditClass();
+    htmlRenderGutter();
+    htmlApplyHighlights();
+    htmlResize();
+    htmlReflow();
+    // Deferred passes catch late layout shifts (fonts, images decoding).
+    setTimeout(() => { if (state.currentFileKind === "html") { htmlResize(); htmlReflow(); } }, 60);
+    setTimeout(() => { if (state.currentFileKind === "html") { htmlResize(); htmlReflow(); } }, 350);
+  }
+
+  // Restore comments previously saved into the file, then remove the saved
+  // <section> from the live DOM (it's re-emitted fresh on the next save).
+  function htmlRehydrate(doc) {
+    const out = [];
+    const sec = doc.getElementById("__doc-comments");
+    if (sec) {
+      sec.querySelectorAll("li[data-for]").forEach((li) => {
+        const id = li.getAttribute("data-for");
+        const bq = li.querySelector("blockquote");
+        const p = li.querySelector("[data-body]") || li.querySelector("p");
+        const f = li.querySelector("footer");
+        let author = MG_AUTHOR, date = "";
+        if (f) {
+          const parts = f.textContent.split("·").map((s) => s.trim());
+          author = parts[0] || author;
+          date = parts[1] || "";
+        }
+        out.push({
+          id, quote: bq ? bq.textContent : "", text: p ? p.textContent : "",
+          author, date, resolved: !!(f && /resolved/i.test(f.textContent)),
+          top: 0, active: false,
+        });
+      });
+      sec.remove();
+    }
+    doc.querySelectorAll("[data-comment-id]").forEach((sp) => {
+      sp.style.background = MG_HL_SOFT;
+      sp.style.cursor = "pointer";
+    });
+    return out;
+  }
+
+  // ----- read / edit mode -----
+
+  function htmlSetMode(edit) {
+    if (!state.html) return;
+    state.html.editMode = !!edit;
+    htmlApplyEditClass();
+    if (htmlReadBtn) htmlReadBtn.classList.toggle("is-active", !edit);
+    if (htmlEditBtn) htmlEditBtn.classList.toggle("is-active", !!edit);
+    if (edit) {
+      hideSelBtn();
+      // Editing over search marks is messy — clear the find state on entry.
+      htmlClearSearch();
+      if (searchInput) searchInput.value = "";
+      updateSearchCount();
+    }
+  }
+  function htmlApplyEditClass() {
+    const doc = htmlDocOf();
+    if (!doc || !doc.body) return;
+    doc.body.classList.toggle("__mg-edit", !!(state.html && state.html.editMode));
+    if (!state.html || !state.html.editMode) {
+      doc.querySelectorAll('[contenteditable="true"]').forEach((el) => el.removeAttribute("contenteditable"));
+    }
+  }
+
+  function htmlDocClick(e) {
+    const hl = e.target.closest && e.target.closest("[data-comment-id]");
+    if (hl && (!state.html || !state.html.editMode)) {
+      e.preventDefault();
+      htmlActivate(hl.getAttribute("data-comment-id"), true);
+      return;
+    }
+    if (!state.html || !state.html.editMode) return;
+    const doc = htmlDocOf();
+    const el = e.target;
+    if (!el || el === doc.body || el === doc.documentElement) return;
+    if (el.isContentEditable) return;
+    const tag = el.tagName;
+    if (tag === "IMG" || tag === "SVG" || tag === "VIDEO" || tag === "INPUT" || tag === "BUTTON" || tag === "SELECT" || tag === "TEXTAREA") return;
+    el.setAttribute("contenteditable", "true");
+    el.focus();
+  }
+  function htmlDocFocusOut(e) {
+    const el = e.target;
+    if (el && el.getAttribute && el.getAttribute("contenteditable") === "true") {
+      el.removeAttribute("contenteditable");
+      htmlReflow();
+    }
+  }
+
+  // ----- selection → comment -----
+
+  function htmlDocMouseUp() {
+    const doc = htmlDocOf();
+    if (!doc || !state.html || !state.html.showComments) return;
+    const sel = doc.getSelection();
+    if (!sel || sel.isCollapsed || sel.rangeCount === 0) { hideSelBtn(); return; }
+    const range = sel.getRangeAt(0);
+    if (!doc.body.contains(range.commonAncestorContainer)) return;
+    const pe = range.commonAncestorContainer.parentElement;
+    if (pe && pe.closest("[contenteditable='true']")) return;
+    state.html.pendingRange = range.cloneRange();
+    const r = range.getBoundingClientRect();
+    const ir = htmlFrame.getBoundingClientRect();
+    htmlSelBtn.hidden = false;
+    htmlSelBtn.style.top = (ir.top + r.bottom + 8) + "px";
+    htmlSelBtn.style.left = Math.min(ir.left + r.right, ir.right - 40) + "px";
+  }
+  function hideSelBtn() {
+    if (htmlSelBtn && !htmlSelBtn.hidden) htmlSelBtn.hidden = true;
+  }
+
+  function htmlAddComment(e) {
+    if (e) e.preventDefault(); // mousedown — keep the selection alive
+    if (!state.html) return;
+    const range = state.html.pendingRange;
+    const doc = htmlDocOf();
+    if (!range || !doc) return;
+    const id = mgNewId();
+    const span = doc.createElement("span");
+    span.setAttribute("data-comment-id", id);
+    span.style.background = MG_HL_SOFT;
+    span.style.cursor = "pointer";
+    const quote = range.toString().trim();
+    try { range.surroundContents(span); }
+    catch (err) { span.appendChild(range.extractContents()); range.insertNode(span); }
+    const s = doc.getSelection(); if (s) s.removeAllRanges();
+    state.html.comments = state.html.comments.map((x) => ({ ...x, active: false }));
+    state.html.comments.push({
+      id, quote, text: "", author: MG_AUTHOR, date: mgDateLabel(),
+      resolved: false, top: 0, active: true,
+    });
+    state.html.pendingRange = null;
+    hideSelBtn();
+    setHtmlDirty(true);
+    htmlApplyHighlights();
+    htmlRenderGutter();
+    htmlReflow();
+    focusActiveTA();
+  }
+
+  function htmlActivate(id, scroll) {
+    if (!state.html) return;
+    state.html.comments = state.html.comments.map((x) => ({ ...x, active: x.id === id }));
+    htmlApplyHighlights();
+    htmlRenderGutter();
+    htmlReflow();
+    if (scroll) {
+      const doc = htmlDocOf();
+      const el = mgFindSpan(doc, id);
+      const mainEl = document.querySelector(".kindmd-app-main");
+      if (el && mainEl) {
+        const mainRect = mainEl.getBoundingClientRect();
+        const er = el.getBoundingClientRect();
+        mainEl.scrollTo({
+          top: Math.max(0, mainEl.scrollTop + (er.top - mainRect.top) - 130),
+          behavior: prefersReducedMotion() ? "auto" : "smooth",
+        });
+      }
+    }
+    focusActiveTA();
+  }
+
+  function htmlOnDone() {
+    if (!state.html) return;
+    state.html.comments = state.html.comments.map((x) => ({ ...x, active: false }));
+    htmlApplyHighlights();
+    htmlRenderGutter();
+    htmlReflow();
+  }
+  function htmlResolve(id) {
+    if (!state.html) return;
+    state.html.comments = state.html.comments.map((x) => x.id === id ? { ...x, resolved: !x.resolved } : x);
+    setHtmlDirty(true);
+    htmlApplyHighlights();
+    htmlRenderGutter();
+    htmlReflow();
+  }
+  function htmlDelete(id) {
+    if (!state.html) return;
+    const doc = htmlDocOf();
+    const el = mgFindSpan(doc, id);
+    if (el) {
+      const p = el.parentNode;
+      while (el.firstChild) p.insertBefore(el.firstChild, el);
+      p.removeChild(el);
+      p.normalize();
+    }
+    state.html.comments = state.html.comments.filter((x) => x.id !== id);
+    setHtmlDirty(true);
+    htmlRenderGutter();
+    htmlReflow();
+  }
+
+  function htmlApplyHighlights() {
+    const doc = htmlDocOf();
+    if (!doc || !state.html) return;
+    const show = state.html.showComments;
+    for (const c of state.html.comments) {
+      const el = mgFindSpan(doc, c.id);
+      if (!el) continue;
+      el.classList.toggle("__mg-active", !!c.active && show);
+      el.style.background = (!show || c.resolved) ? "transparent" : MG_HL_SOFT;
+      el.style.cursor = show ? "pointer" : "";
+    }
+  }
+
+  function htmlToggleComments() {
+    if (!state.html) return;
+    state.html.showComments = !state.html.showComments;
+    htmlPane.classList.toggle("no-comments", !state.html.showComments);
+    updateHtmlCommentsBtn();
+    htmlApplyHighlights();
+    if (!state.html.showComments) hideSelBtn();
+    htmlResize();
+    htmlReflow();
+  }
+  function updateHtmlCommentsBtn() {
+    const n = state.html ? state.html.comments.length : 0;
+    const on = state.html ? state.html.showComments : true;
+    if (htmlCommentsLabel) htmlCommentsLabel.textContent = on ? "Hide comments" : "Show comments";
+    if (htmlCommentsBtn) {
+      htmlCommentsBtn.classList.toggle("is-on", on);
+      htmlCommentsBtn.setAttribute("aria-pressed", String(on));
+    }
+    if (htmlCommentCount) {
+      if (n > 0) { htmlCommentCount.hidden = false; htmlCommentCount.textContent = String(n); }
+      else { htmlCommentCount.hidden = true; htmlCommentCount.textContent = ""; }
+    }
+  }
+
+  function setHtmlDirty(v) {
+    state.dirty = !!v;
+    if (htmlDirtyDot) htmlDirtyDot.hidden = !v;
+    if (htmlSaveBtn) htmlSaveBtn.classList.toggle("is-dirty", !!v);
+  }
+
+  // ----- find in document (search inside the iframe) -----
+
+  function htmlClearSearch() {
+    const doc = htmlDocOf();
+    if (doc) {
+      doc.querySelectorAll(".__mg-search").forEach((m) => {
+        const p = m.parentNode;
+        if (!p) return;
+        while (m.firstChild) p.insertBefore(m.firstChild, m);
+        p.removeChild(m);
+        p.normalize();
+      });
+    }
+    state.searchMatches = [];
+    state.searchIndex = -1;
+  }
+
+  function runSearchInHtml(query) {
+    const doc = htmlDocOf();
+    htmlClearSearch();
+    if (!doc || !doc.body || !query || query.length < 2) { updateSearchCount(); return; }
+    const q = query.toLowerCase();
+    const marks = [];
+    const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        let p = node.parentNode;
+        while (p && p !== doc.body) {
+          if (p.tagName === "SCRIPT" || p.tagName === "STYLE") return NodeFilter.FILTER_REJECT;
+          if (p.classList && p.classList.contains("__mg-search")) return NodeFilter.FILTER_REJECT;
+          p = p.parentNode;
+        }
+        return node.nodeValue.toLowerCase().includes(q) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      },
+    });
+    const textNodes = [];
+    let n;
+    while ((n = walker.nextNode())) textNodes.push(n);
+    for (const node of textNodes) {
+      const text = node.nodeValue;
+      const lower = text.toLowerCase();
+      let from = 0, idx;
+      const frag = doc.createDocumentFragment();
+      const local = [];
+      while ((idx = lower.indexOf(q, from)) !== -1) {
+        if (idx > from) frag.appendChild(doc.createTextNode(text.slice(from, idx)));
+        const mark = doc.createElement("span");
+        mark.className = "__mg-search";
+        mark.textContent = text.slice(idx, idx + q.length);
+        frag.appendChild(mark);
+        local.push(mark);
+        from = idx + q.length;
+      }
+      if (from < text.length) frag.appendChild(doc.createTextNode(text.slice(from)));
+      node.parentNode.replaceChild(frag, node);
+      marks.push(...local);
+    }
+    state.searchMatches = marks;
+    state.searchIndex = marks.length ? 0 : -1;
+    updateSearchCount();
+    if (marks.length) focusMatchInHtml(0);
+  }
+
+  function focusMatchInHtml(idx) {
+    const marks = state.searchMatches;
+    if (!marks.length) return;
+    marks.forEach((m, i) => { if (m && m.classList) m.classList.toggle("__mg-cur", i === idx); });
+    state.searchIndex = idx;
+    const mark = marks[idx];
+    const mainEl = document.querySelector(".kindmd-app-main");
+    if (mark && mainEl) {
+      const mainRect = mainEl.getBoundingClientRect();
+      const r = mark.getBoundingClientRect();
+      mainEl.scrollTo({
+        top: Math.max(0, mainEl.scrollTop + (r.top - mainRect.top) - 160),
+        behavior: prefersReducedMotion() ? "auto" : "smooth",
+      });
+    }
+    updateSearchCount();
+  }
+
+  // ----- gutter cards -----
+
+  function htmlRenderGutter() {
+    if (!htmlGutter || !state.html) return;
+    htmlGutter.querySelectorAll("[data-card-id]").forEach((n) => n.remove());
+    const comments = state.html.comments;
+    if (htmlGutterHint) htmlGutterHint.style.display = comments.length ? "none" : "";
+    for (const c of comments) htmlGutter.appendChild(buildCommentCard(c));
+    updateHtmlCommentsBtn();
+  }
+
+  function buildCommentCard(c) {
+    const card = document.createElement("div");
+    card.className = "kindmd-mg-card" + (c.active ? " is-active" : "") + (c.resolved ? " is-resolved" : "");
+    card.setAttribute("data-card-id", c.id);
+
+    const head = document.createElement("div");
+    head.className = "kindmd-mg-head";
+    const avatar = document.createElement("div");
+    avatar.className = "kindmd-mg-avatar";
+    avatar.textContent = (c.author || "Y").slice(0, 1).toUpperCase();
+    const author = document.createElement("span");
+    author.className = "kindmd-mg-author";
+    author.textContent = c.author || MG_AUTHOR;
+    const date = document.createElement("span");
+    date.className = "kindmd-mg-date";
+    date.textContent = c.date || "";
+    const spacer = document.createElement("div");
+    spacer.className = "kindmd-mg-spacer";
+    head.append(avatar, author, date, spacer);
+    if (c.resolved) {
+      const badge = document.createElement("span");
+      badge.className = "kindmd-mg-badge";
+      badge.textContent = "Resolved";
+      head.appendChild(badge);
+    }
+    card.appendChild(head);
+
+    const quote = document.createElement("div");
+    quote.className = "kindmd-mg-quote";
+    quote.textContent = c.quote || "";
+    card.appendChild(quote);
+
+    if (c.active) {
+      const ta = document.createElement("textarea");
+      ta.className = "kindmd-mg-ta";
+      ta.value = c.text || "";
+      ta.placeholder = "Write a comment…";
+      ta.addEventListener("input", () => { c.text = ta.value; setHtmlDirty(true); });
+      ta.addEventListener("keydown", (e) => {
+        e.stopPropagation(); // keep global shortcuts out of the note field
+        if (e.key === "Escape") { e.preventDefault(); htmlOnDone(); }
+      });
+      card.appendChild(ta);
+
+      const actions = document.createElement("div");
+      actions.className = "kindmd-mg-actions";
+      const done = document.createElement("button");
+      done.type = "button"; done.className = "kindmd-mg-btn kindmd-mg-btn-done";
+      done.textContent = "Done"; done.addEventListener("click", htmlOnDone);
+      const resolve = document.createElement("button");
+      resolve.type = "button"; resolve.className = "kindmd-mg-btn kindmd-mg-btn-resolve";
+      resolve.textContent = c.resolved ? "Reopen" : "Resolve";
+      resolve.addEventListener("click", () => htmlResolve(c.id));
+      const sp2 = document.createElement("div");
+      sp2.className = "kindmd-mg-spacer";
+      const del = document.createElement("button");
+      del.type = "button"; del.className = "kindmd-mg-btn kindmd-mg-btn-del";
+      del.title = "Delete"; del.textContent = "✕";
+      del.addEventListener("click", () => htmlDelete(c.id));
+      actions.append(done, resolve, sp2, del);
+      card.appendChild(actions);
+    } else {
+      const preview = document.createElement("div");
+      const hasText = !!(c.text && c.text.trim());
+      preview.className = "kindmd-mg-preview" + (hasText ? "" : " is-empty");
+      preview.textContent = hasText ? c.text : "Add a note…";
+      card.appendChild(preview);
+      card.addEventListener("click", () => htmlActivate(c.id, false));
+    }
+    return card;
+  }
+
+  function focusActiveTA() {
+    if (!htmlGutter) return;
+    const ta = htmlGutter.querySelector("[data-card-id].is-active textarea");
+    if (ta) { ta.focus(); const v = ta.value; try { ta.setSelectionRange(v.length, v.length); } catch { /* ignore */ } }
+  }
+
+  // ----- layout / measurement -----
+
+  function htmlResize() {
+    const doc = htmlDocOf();
+    if (!doc || !htmlFrame) return;
+    const h = Math.max(
+      doc.body ? doc.body.scrollHeight : 0,
+      doc.documentElement ? doc.documentElement.scrollHeight : 0
+    );
+    if (h > 0) {
+      htmlFrame.style.height = h + "px";
+      state.html.docHeight = h;
+      if (htmlGutter) htmlGutter.style.minHeight = h + "px";
+    }
+  }
+  function htmlComputePins() {
+    const doc = htmlDocOf();
+    if (!doc || !htmlFrame || !state.html) return;
+    const ir = htmlFrame.getBoundingClientRect();
+    for (const c of state.html.comments) {
+      const el = mgFindSpan(doc, c.id);
+      if (el) c.top = Math.max(0, el.getBoundingClientRect().top - ir.top);
+    }
+  }
+  function htmlLayoutGutter() {
+    if (!htmlGutter || !state.html) return;
+    const byId = {};
+    for (const c of state.html.comments) byId[c.id] = c;
+    const cards = Array.from(htmlGutter.querySelectorAll("[data-card-id]"));
+    cards.sort((a, b) => (byId[a.dataset.cardId]?.top || 0) - (byId[b.dataset.cardId]?.top || 0));
+    let cursor = -1e9;
+    for (const card of cards) {
+      const c = byId[card.dataset.cardId];
+      if (!c) continue;
+      const top = Math.max(c.top, cursor);
+      card.style.top = top + "px";
+      cursor = top + card.offsetHeight + 12;
+    }
+  }
+  function htmlReflow() {
+    if (state.currentFileKind !== "html") return;
+    htmlComputePins();
+    htmlLayoutGutter();
+  }
+
+  // ----- saving (serialize back into the file) -----
+
+  function htmlBuildCommentsSection() {
+    const items = state.html.comments.map((c) => {
+      const st = c.resolved ? "opacity:.55;" : "";
+      return `<li data-for="${mgEsc(c.id)}" style="list-style:none;margin:0 0 16px;padding:16px 18px;border:1px solid #e6e6e2;border-radius:12px;background:#fff;${st}">`
+        + `<blockquote style="margin:0 0 10px;padding:0 0 0 11px;border-left:3px solid ${MG_HL};color:#666;font-style:italic;font-size:14px;line-height:1.45">${mgEsc(c.quote)}</blockquote>`
+        + `<p data-body style="margin:0 0 8px;color:#1c1c1a;font-size:14px;line-height:1.5;white-space:pre-wrap">${mgEsc(c.text || "")}</p>`
+        + `<footer style="font-size:12px;color:#9a9a92">${mgEsc(c.author)} · ${mgEsc(c.date)}${c.resolved ? " · resolved" : ""}</footer>`
+        + `</li>`;
+    }).join("");
+    return `<section id="__doc-comments" style="max-width:760px;margin:56px auto 40px;padding:26px 20px 0;border-top:1px solid #e6e6e2;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif">`
+      + `<h2 style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a92;margin:0 0 18px;font-weight:700">Comments</h2>`
+      + `<ol style="list-style:none;padding:0;margin:0">${items}</ol></section>`;
+  }
+  function htmlSerialize() {
+    const doc = htmlDocOf();
+    if (!doc) return state.currentRaw || "";
+    doc.querySelectorAll('[contenteditable="true"]').forEach((el) => el.removeAttribute("contenteditable"));
+    const clone = doc.documentElement.cloneNode(true);
+    clone.querySelectorAll("#__mg-chrome, #__doc-comments").forEach((n) => n.remove());
+    clone.querySelectorAll("[contenteditable]").forEach((n) => n.removeAttribute("contenteditable"));
+    clone.querySelectorAll(".__mg-active").forEach((n) => n.classList.remove("__mg-active"));
+    // Unwrap any find-in-document search marks so they never reach the file.
+    clone.querySelectorAll(".__mg-search").forEach((n) => {
+      const p = n.parentNode; if (!p) return;
+      while (n.firstChild) p.insertBefore(n.firstChild, n);
+      p.removeChild(n);
+    });
+    // Tidy up empty attributes our chrome may have left behind (e.g. class="").
+    clone.querySelectorAll('[class=""]').forEach((n) => n.removeAttribute("class"));
+    if (state.html.comments.length) {
+      const body = clone.querySelector("body") || clone;
+      const tmp = doc.createElement("div");
+      tmp.innerHTML = htmlBuildCommentsSection();
+      if (tmp.firstElementChild) body.appendChild(tmp.firstElementChild);
+    }
+    return "<!DOCTYPE html>\n" + clone.outerHTML;
+  }
+  async function htmlSave(opts = {}) {
+    const { silent = false } = opts;
+    if (!state.currentFile || state.currentFileKind !== "html") return { ok: false };
+    const html = htmlSerialize();
+    const res = await kindmd.writeFile(state.currentFile, html);
+    if (res && res.ok) {
+      state.currentRaw = html;
+      setHtmlDirty(false);
+      if (footerModified) footerModified.textContent = formatModified(res.modifiedAt);
+      if (!silent) flashMessage("Saved");
+      // write-file paused the watcher to avoid a self-trigger — re-arm it.
+      kindmd.watchFile(state.currentFile);
+      return res;
+    }
+    flashMessage("Save failed" + (res && res.error ? ` — ${res.error}` : ""));
+    return res || { ok: false };
+  }
+
+  function htmlTeardown() {
+    const doc = htmlDocOf();
+    if (doc) {
+      doc.removeEventListener("click", htmlDocClick);
+      doc.removeEventListener("focusout", htmlDocFocusOut);
+      doc.removeEventListener("mouseup", htmlDocMouseUp);
+    }
+    hideSelBtn();
+    state.searchMatches = []; state.searchIndex = -1;
+    if (searchInput) searchInput.value = "";
+    if (searchCount) { searchCount.textContent = ""; searchCount.classList.remove("is-empty"); }
+    if (htmlGutter) htmlGutter.querySelectorAll("[data-card-id]").forEach((n) => n.remove());
+    if (htmlFrame) { htmlFrame.onload = null; htmlFrame.removeAttribute("srcdoc"); }
+    if (htmlTools) htmlTools.hidden = true;
+    htmlPane.hidden = true;
+    htmlPane.classList.remove("no-comments");
+    document.body.classList.remove("kindmd-html-active");
+    state.html = null;
+  }
+
+  // ----- wiring: toolbar, floating button, window events -----
+
+  if (htmlSelBtn) htmlSelBtn.addEventListener("mousedown", htmlAddComment);
+  if (htmlReadBtn) htmlReadBtn.addEventListener("click", () => htmlSetMode(false));
+  if (htmlEditBtn) htmlEditBtn.addEventListener("click", () => htmlSetMode(true));
+  if (htmlCommentsBtn) htmlCommentsBtn.addEventListener("click", htmlToggleComments);
+  if (htmlSaveBtn) htmlSaveBtn.addEventListener("click", () => htmlSave());
+
+  window.addEventListener("resize", () => {
+    if (state.currentFileKind === "html") { htmlResize(); htmlReflow(); }
+  });
+  (function attachHtmlScroll() {
+    const mainEl = document.querySelector(".kindmd-app-main");
+    if (mainEl) mainEl.addEventListener("scroll", () => {
+      if (state.currentFileKind === "html") hideSelBtn();
+    }, { passive: true });
+  })();
+
   // ---------- Edit mode ----------
 
   // Slugify must match what render.js produces so the active id we set on the
@@ -1076,10 +1798,8 @@
     editTextarea.value = state.currentRaw || "";
     state.dirty = false;
     setDirtyIndicator(false);
-    if (editToggleBtn) {
-      editToggleBtn.setAttribute("aria-pressed", "true");
-      editLabel.textContent = "Read";
-    }
+    if (mdEditBtn) mdEditBtn.classList.add("is-active");
+    if (mdReadBtn) mdReadBtn.classList.remove("is-active");
     updateActionButton();
     // Pause file watcher while editing so we don't fight the user mid-keystroke.
     kindmd.unwatchFile();
@@ -1115,10 +1835,8 @@
     editPane.hidden = true;
     articleEl.hidden = false;
     if (editHints) editHints.hidden = true;
-    if (editToggleBtn) {
-      editToggleBtn.setAttribute("aria-pressed", "false");
-      editLabel.textContent = "Edit";
-    }
+    if (mdReadBtn) mdReadBtn.classList.add("is-active");
+    if (mdEditBtn) mdEditBtn.classList.remove("is-active");
     updateActionButton();
     // Drop any edit-mode match state — it's textarea ranges, not DOM marks.
     state.searchMatches = [];
@@ -1172,12 +1890,8 @@
     editDirtyDot.hidden = !isDirty;
   }
 
-  if (editToggleBtn) {
-    editToggleBtn.addEventListener("click", () => {
-      if (state.editMode) exitEditMode();
-      else enterEditMode();
-    });
-  }
+  if (mdReadBtn) mdReadBtn.addEventListener("click", () => { if (state.editMode) exitEditMode(); });
+  if (mdEditBtn) mdEditBtn.addEventListener("click", () => { if (!state.editMode) enterEditMode(); });
 
   if (editTextarea) {
     editTextarea.addEventListener("input", () => {
@@ -1468,7 +2182,8 @@
   }
 
   function runSearch(query) {
-    // Search must work in both modes — dispatch by current view.
+    // Search must work in every mode — dispatch by current view.
+    if (state.currentFileKind === "html") return runSearchInHtml(query);
     if (state.editMode) return runSearchInEditor(query);
     if (state.currentFileKind === "csv") return runSearchInCsv(query);
     clearSearchHighlights();
@@ -1539,6 +2254,7 @@
 
   function focusMatch(idx) {
     if (!state.searchMatches.length) return;
+    if (state.currentFileKind === "html") return focusMatchInHtml(idx);
     if (state.editMode) return focusMatchInEditor(idx);
     state.searchMatches.forEach((m, i) => {
       if (m && m.classList) m.classList.toggle("is-current", i === idx);
@@ -1647,6 +2363,9 @@
       searchInput.value = "";
       if (state.currentFileKind === "csv") {
         runSearchInCsv("");
+      } else if (state.currentFileKind === "html") {
+        htmlClearSearch();
+        updateSearchCount();
       } else {
         clearSearchHighlights();
         updateSearchCount();
@@ -1656,23 +2375,37 @@
   });
 
   document.addEventListener("keydown", (e) => {
-    // Cmd-S saves while in edit mode
+    // Cmd-S saves while in edit mode (markdown) or any time in HTML mode.
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
+      if (state.currentFileKind === "html") {
+        e.preventDefault();
+        htmlSave();
+        return;
+      }
       if (state.editMode) {
         e.preventDefault();
         saveEdits();
         return;
       }
     }
-    // Cmd-E toggles edit mode (in addition to clicking the button).
-    // CSV files are view-only in v1, so the shortcut is a no-op for them.
+    // Cmd-E toggles edit mode. HTML flips Read/Edit in place; CSV is view-only.
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "e" && !e.shiftKey) {
-      if (state.currentFile && state.currentFileKind !== "csv") {
+      if (state.currentFileKind === "html" && state.html) {
+        e.preventDefault();
+        htmlSetMode(!state.html.editMode);
+        return;
+      }
+      if (state.currentFile && state.currentFileKind === "md") {
         e.preventDefault();
         if (state.editMode) exitEditMode();
         else enterEditMode();
       }
       return;
+    }
+    // Escape in HTML mode: dismiss the comment button, then drop out of edit mode.
+    if (e.key === "Escape" && state.currentFileKind === "html" && state.html) {
+      if (htmlSelBtn && !htmlSelBtn.hidden) { hideSelBtn(); return; }
+      if (state.html.editMode) { htmlSetMode(false); return; }
     }
     // Cmd-F or Cmd-K always focus search — works in both Read and Edit modes.
     if ((e.metaKey || e.ctrlKey) && (e.key.toLowerCase() === "f" || e.key.toLowerCase() === "k")) {
@@ -1841,12 +2574,19 @@ ${styles.join("\n\n")}
   });
 
   kindmd.onFileChanged((changedPath) => {
-    if (changedPath === state.currentFile) {
-      // Reset CSV UI state so a changed file shows fresh — filters tied to
-      // the old data shape wouldn't make sense after a column add/remove.
-      if (state.currentFileKind === "csv") state.csv = null;
-      loadDocument(state.currentFile, { preserveScroll: true });
+    if (changedPath !== state.currentFile) return;
+    // HTML: don't reload over unsaved marginalia/edits — the user would lose
+    // work. (Our own saves pause the watcher, so this is a genuine outside edit.)
+    if (state.currentFileKind === "html") {
+      if (state.dirty) { flashMessage("File changed on disk — save to overwrite, or reopen to reload"); return; }
+      htmlTeardown();
+      loadDocument(state.currentFile);
+      return;
     }
+    // Reset CSV UI state so a changed file shows fresh — filters tied to
+    // the old data shape wouldn't make sense after a column add/remove.
+    if (state.currentFileKind === "csv") state.csv = null;
+    loadDocument(state.currentFile, { preserveScroll: true });
   });
 
   kindmd.onToggleSidebar(() => {

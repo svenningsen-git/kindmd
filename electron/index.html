@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' file: data:;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' file: data: blob: https:; frame-src 'self' data:; font-src 'self' data:;">
 <title>kindmd</title>
 <link rel="stylesheet" href="../client/styles.css">
 <link rel="stylesheet" href="./app.css">
@@ -41,13 +41,25 @@
           <input id="kindmd-search-input" type="search" placeholder="Search (⌘F)" autocomplete="off" spellcheck="false" data-search-input>
           <span class="kindmd-search-count" aria-live="polite" data-search-count></span>
         </form>
-        <button class="kindmd-edit-toggle" type="button" data-edit-toggle aria-pressed="false" aria-label="Toggle edit mode" disabled>
-          <span class="kindmd-edit-icon" aria-hidden="true">✎</span>
-          <span class="kindmd-edit-label" data-edit-label>Edit</span>
-          <span class="kindmd-edit-dirty" data-edit-dirty aria-hidden="true" hidden>●</span>
-        </button>
+        <div class="kindmd-seg kindmd-md-seg" data-md-seg role="group" aria-label="Reading mode" hidden>
+          <button type="button" class="is-active" data-md-read>Read</button>
+          <button type="button" data-md-edit>Edit<span class="kindmd-seg-dot" data-edit-dirty aria-hidden="true" hidden></span></button>
+        </div>
         <div class="kindmd-app-tools">
-          <button class="kindmd-export" type="button" data-export aria-label="Export as HTML">Export</button>
+          <button class="kindmd-btn kindmd-export" type="button" data-export aria-label="Export as HTML">Export</button>
+        </div>
+        <div class="kindmd-html-tools" data-html-tools hidden>
+          <div class="kindmd-seg" role="group" aria-label="Reading mode">
+            <button type="button" class="is-active" data-html-read>Read</button>
+            <button type="button" data-html-edit>Edit</button>
+          </div>
+          <button type="button" class="kindmd-btn kindmd-html-comments is-on" data-html-comments aria-pressed="true">
+            <span class="kindmd-html-comments-label" data-html-comments-label>Hide comments</span>
+            <span class="kindmd-html-comments-count" data-html-comment-count hidden></span>
+          </button>
+          <button type="button" class="kindmd-btn kindmd-html-save" data-html-save>
+            Save<span class="kindmd-html-save-dirty" data-html-dirty aria-hidden="true" hidden></span>
+          </button>
         </div>
       </div>
     </header>
@@ -59,6 +71,16 @@
     </article>
     <section class="kindmd-edit-pane" data-edit-pane hidden aria-label="Markdown editor">
       <textarea class="kindmd-edit-textarea" data-edit-textarea spellcheck="false" autocapitalize="off" autocorrect="off" wrap="soft"></textarea>
+    </section>
+    <section class="kindmd-html-pane" data-html-pane hidden aria-label="HTML document">
+      <div class="kindmd-html-canvas" data-html-canvas>
+        <div class="kindmd-html-page">
+          <iframe class="kindmd-html-frame" data-html-frame title="HTML document" sandbox="allow-same-origin"></iframe>
+        </div>
+        <div class="kindmd-html-gutter" data-html-gutter>
+          <div class="kindmd-html-gutter-hint" data-html-gutter-hint>Select any text in the document to leave a comment. Pins appear here in the margin.</div>
+        </div>
+      </div>
     </section>
     <footer class="kindmd-footer" data-footer style="display:none">
       <span class="kindmd-footer-path" data-footer-path></span>
@@ -91,6 +113,10 @@
     <span>Copy Path</span>
   </button>
 </div>
+
+<button class="kindmd-html-selbtn" data-html-selbtn type="button" hidden>
+  <span class="kindmd-html-selbtn-icon" aria-hidden="true">💬</span> Comment
+</button>
 
 <div class="kindmd-edit-hints" data-edit-hints hidden aria-hidden="true">
   <span><kbd>⌘S</kbd> save</span>
