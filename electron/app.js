@@ -1024,8 +1024,8 @@
   //  adapted from its React/DCLogic form to kindmd's imperative renderer.
   // ==================================================================
 
-  const MG_HL = "#c9c7c1";               // highlight rule (neutral grey — monochrome)
-  const MG_HL_SOFT = "rgba(0,0,0,.12)";  // highlight fill on the in-doc span
+  const MG_HL = "#ffd24a";                    // highlight rule / quote accent (amber)
+  const MG_HL_SOFT = "rgba(255,214,74,.5)";   // amber highlighter fill on the in-doc span
   const MG_AUTHOR = "You";
 
   // ---- Embedded standalone marginalia component ----
@@ -1042,7 +1042,7 @@
     ".__mg-embed-author{font-size:12.5px;font-weight:600}" +
     ".__mg-embed-date{font-size:11.5px;color:#999}" +
     ".__mg-embed-badge{margin-left:auto;font-size:10.5px;font-weight:600;color:#555;background:rgba(0,0,0,.07);padding:2px 6px;border-radius:5px}" +
-    ".__mg-embed-quote{font-size:12px;color:#8a8a82;font-style:italic;padding-left:9px;border-left:2px solid #c9c7c1;margin-bottom:7px;line-height:1.4;max-height:44px;overflow:hidden}" +
+    ".__mg-embed-quote{font-size:12px;color:#8a8a82;font-style:italic;padding-left:9px;border-left:2px solid #ffd24a;margin-bottom:7px;line-height:1.4;max-height:44px;overflow:hidden}" +
     ".__mg-embed-body{font-size:13px;line-height:1.45;white-space:pre-wrap;color:#33332e}" +
     ".__mg-embed-body.__mg-empty{color:#b0b0a8}" +
     "#__mg-embed-toggle{position:fixed;top:12px;right:12px;z-index:2147483002;height:30px;padding:0 12px;border:1px solid rgba(0,0,0,.16);border-radius:8px;background:#fff;color:#1a1a1a;font:600 12.5px -apple-system,BlinkMacSystemFont,system-ui,sans-serif;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.12)}" +

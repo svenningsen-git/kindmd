@@ -731,7 +731,7 @@ body.kindmd-html-active .kindmd-app-titlebar {
 
 .kindmd-mg-quote {
   font-size: 12px; color: #8a8a82; font-style: italic;
-  padding-left: 9px; border-left: 2px solid #c9c7c1;
+  padding-left: 9px; border-left: 2px solid #ffd24a;
   margin-bottom: 8px; line-height: 1.4;
   max-height: 44px; overflow: hidden;
 }
