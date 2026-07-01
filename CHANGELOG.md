@@ -25,8 +25,8 @@
 ### Added — portable, self-contained comments
 - Saving an annotated HTML file now embeds a small self-contained marginalia component (inline CSS + JS) alongside the highlight spans and comment data. **Open the saved file in any regular browser and the comment gutter renders with a Show/Hide toggle and pins aligned to each highlight** — no kindmd required. kindmd strips the embedded component on open and re-emits it on save, so editing round-trips cleanly.
 
-### Changed — full-width HTML rendering
-- The HTML document now fills the whole content area (with the comment gutter to its right when shown, and edge-to-edge when comments are hidden) instead of a narrow centered column.
+### Changed — browser-like HTML rendering
+- The HTML document now renders edge-to-edge like a browser tab — no card framing, borders, or outer padding — filling the whole content area, with the comments as a side panel on the right (edge-to-edge when comments are hidden). Previously it sat in a narrow, padded, centered card.
 
 ## Unreleased
 
