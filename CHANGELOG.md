@@ -12,7 +12,7 @@
 - Adapted from the "Marginalia" Claude Design prototype; save-to-disk replaces the prototype's browser download, and the app's file tree replaces its single-file open.
 
 ### Changed — fully monochrome
-- Entire palette converted to neutral greyscale — no hue anywhere. The oxblood/gold/sage accents, warm paper/ink/rule tones, CSV filter tints, and even the code-block syntax theme (now differentiated by lightness + italic, not colour) are all monochrome.
+- Entire palette converted to neutral greyscale. The oxblood/gold/sage accents, warm paper/ink/rule tones, and CSV filter tints are all monochrome. Code-block **syntax highlighting keeps its colours** — the one deliberate exception, since colour carries meaning there.
 - Sidebar (file navigation) is white with black text and a black active row.
 - CSV renders on a white surface; HTML sits on a soft neutral stage so the document card reads as a page; the markdown reader is neutral paper.
 

@@ -18,8 +18,10 @@
   --gold:        #6B6B6B;
   --gold-fill:   #D7D7D7;
   --chip-bg:     #EAEAEA;
-  --code-bg:     #1C1C1C;
-  --code-fg:     #E6E6E6;
+  /* Code blocks keep a colored syntax theme — the one deliberate exception to
+     the otherwise monochrome palette. */
+  --code-bg:     #1F1B17;
+  --code-fg:     #E8DFCD;
 
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
                "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -493,7 +495,7 @@ body.kindmd-mode-file .kindmd-layout {
   border-radius: 7px;
   overflow: hidden;
   background: var(--code-bg);
-  border: 1px solid #2C2C2C;
+  border: 1px solid #2A2622;
 }
 .kindmd-code-label {
   font-family: var(--font-mono);
@@ -501,10 +503,10 @@ body.kindmd-mode-file .kindmd-layout {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: #9A9A9A;
-  background: #161616;
+  color: #B3A586;
+  background: #181513;
   padding: 7px 14px;
-  border-bottom: 1px solid #2C2C2C;
+  border-bottom: 1px solid #2A2622;
 }
 .kindmd-code-pre {
   margin: 0;
@@ -518,38 +520,38 @@ body.kindmd-mode-file .kindmd-layout {
 }
 .kindmd-code-pre code { font-family: inherit; font-size: inherit; }
 
-/* Prism tokens — monochrome. Differentiated by lightness + italic, not hue. */
+/* Prism token colours — the one colored element in an otherwise monochrome UI. */
 .kindmd-code-pre .token.comment,
 .kindmd-code-pre .token.prolog,
 .kindmd-code-pre .token.doctype,
-.kindmd-code-pre .token.cdata { color: #8C8C8C; font-style: italic; }
-.kindmd-code-pre .token.punctuation { color: #A8A8A8; }
+.kindmd-code-pre .token.cdata { color: #8A8270; font-style: italic; }
+.kindmd-code-pre .token.punctuation { color: #B3A586; }
 .kindmd-code-pre .token.property,
 .kindmd-code-pre .token.tag,
 .kindmd-code-pre .token.boolean,
 .kindmd-code-pre .token.number,
 .kindmd-code-pre .token.constant,
-.kindmd-code-pre .token.symbol { color: #E2E2E2; }
+.kindmd-code-pre .token.symbol { color: #E8B05E; }
 .kindmd-code-pre .token.selector,
 .kindmd-code-pre .token.attr-name,
 .kindmd-code-pre .token.string,
 .kindmd-code-pre .token.char,
 .kindmd-code-pre .token.builtin,
-.kindmd-code-pre .token.inserted { color: #C2C2C2; }
+.kindmd-code-pre .token.inserted { color: #A8C49A; }
 .kindmd-code-pre .token.operator,
 .kindmd-code-pre .token.entity,
 .kindmd-code-pre .token.url,
 .kindmd-code-pre .language-css .token.string,
-.kindmd-code-pre .style .token.string { color: #CFCFCF; }
+.kindmd-code-pre .style .token.string { color: #D9C2A0; }
 .kindmd-code-pre .token.atrule,
 .kindmd-code-pre .token.attr-value,
-.kindmd-code-pre .token.keyword { color: #FFFFFF; font-weight: 600; }
+.kindmd-code-pre .token.keyword { color: #F2A7A7; }
 .kindmd-code-pre .token.function,
-.kindmd-code-pre .token.class-name { color: #DCDCDC; }
+.kindmd-code-pre .token.class-name { color: #F5C690; }
 .kindmd-code-pre .token.regex,
 .kindmd-code-pre .token.important,
-.kindmd-code-pre .token.variable { color: #E2E2E2; }
-.kindmd-code-pre .token.deleted { color: #BDBDBD; }
+.kindmd-code-pre .token.variable { color: #E8B05E; }
+.kindmd-code-pre .token.deleted { color: #E89A8C; }
 
 /* Blockquote */
 .kindmd-article blockquote.kindmd-blockquote {

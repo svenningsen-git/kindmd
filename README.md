@@ -78,7 +78,7 @@ kindmd --help                   # print usage
 
 ## What you get
 
-- A restrained monochrome palette — neutral greyscale, no hue
+- A restrained monochrome palette — neutral greyscale (code blocks keep colored syntax highlighting)
 - Numbered H2 sections with rule separators
 - Auto-built TOC with active-section tracking (works in edit mode too)
 - Live search with grey highlighting (markdown & HTML) or row filtering (CSV)
