@@ -1028,6 +1028,79 @@
   const MG_HL_SOFT = "rgba(0,0,0,.12)";  // highlight fill on the in-doc span
   const MG_AUTHOR = "You";
 
+  // ---- Embedded standalone marginalia component ----
+  // Saved into the HTML file so the comment gutter (with show/hide + pins) works
+  // when the file is opened in a plain browser — no kindmd required. kindmd
+  // strips these nodes on open (htmlRehydrate) and re-emits them on save.
+  const MG_EMBED_STYLE =
+    "#__mg-embed-root{position:fixed;top:0;right:0;width:340px;height:100vh;z-index:2147483000;box-sizing:border-box;background:#fafafa;border-left:1px solid rgba(0,0,0,.1);pointer-events:none}" +
+    "#__mg-embed-gutter{position:relative;height:100%;overflow:hidden;pointer-events:auto;padding:0 12px}" +
+    ".__mg-embed-card{position:absolute;left:12px;right:12px;background:#fff;border:1px solid rgba(0,0,0,.12);border-radius:12px;padding:12px 13px;box-shadow:0 1px 2px rgba(0,0,0,.06);font:13px/1.45 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;color:#1a1a1a;transition:top .15s ease;cursor:pointer}" +
+    ".__mg-embed-card.__mg-resolved{opacity:.6}" +
+    ".__mg-embed-head{display:flex;align-items:center;gap:8px;margin-bottom:7px}" +
+    ".__mg-embed-av{width:22px;height:22px;border-radius:50%;background:#1a1a1a;color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none}" +
+    ".__mg-embed-author{font-size:12.5px;font-weight:600}" +
+    ".__mg-embed-date{font-size:11.5px;color:#999}" +
+    ".__mg-embed-badge{margin-left:auto;font-size:10.5px;font-weight:600;color:#555;background:rgba(0,0,0,.07);padding:2px 6px;border-radius:5px}" +
+    ".__mg-embed-quote{font-size:12px;color:#8a8a82;font-style:italic;padding-left:9px;border-left:2px solid #c9c7c1;margin-bottom:7px;line-height:1.4;max-height:44px;overflow:hidden}" +
+    ".__mg-embed-body{font-size:13px;line-height:1.45;white-space:pre-wrap;color:#33332e}" +
+    ".__mg-embed-body.__mg-empty{color:#b0b0a8}" +
+    "#__mg-embed-toggle{position:fixed;top:12px;right:12px;z-index:2147483002;height:30px;padding:0 12px;border:1px solid rgba(0,0,0,.16);border-radius:8px;background:#fff;color:#1a1a1a;font:600 12.5px -apple-system,BlinkMacSystemFont,system-ui,sans-serif;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.12)}" +
+    "[data-comment-id]{cursor:pointer}" +
+    "@media print{#__mg-embed-root,#__mg-embed-toggle{display:none!important}html{margin-right:0!important}}";
+
+  const MG_EMBED_RUNTIME = `(function(){
+  var sec=document.getElementById('__doc-comments'); if(!sec) return;
+  var items=[].slice.call(sec.querySelectorAll('li[data-for]')).map(function(li){
+    var bq=li.querySelector('blockquote'), p=li.querySelector('[data-body]')||li.querySelector('p'), f=li.querySelector('footer');
+    var author='',date='',resolved=false;
+    if(f){var parts=f.textContent.split('\\u00b7').map(function(s){return s.trim();});author=parts[0]||'';date=parts[1]||'';resolved=/resolved/i.test(f.textContent);}
+    return {id:li.getAttribute('data-for'),quote:bq?bq.textContent:'',text:(p?p.textContent:'').trim(),author:author,date:date,resolved:resolved};
+  });
+  sec.style.display='none'; if(!items.length) return;
+  var GW=340, shown=true, cards={};
+  function findSpan(id){var l=document.querySelectorAll('[data-comment-id]');for(var i=0;i<l.length;i++){if(l[i].getAttribute('data-comment-id')===id)return l[i];}return null;}
+  function flash(el){el.style.outline='2px solid #1a1a1a';el.style.outlineOffset='1px';setTimeout(function(){el.style.outline='';el.style.outlineOffset='';},900);}
+  var root=document.createElement('div');root.id='__mg-embed-root';
+  var gutter=document.createElement('div');gutter.id='__mg-embed-gutter';root.appendChild(gutter);
+  document.body.appendChild(root);
+  var toggle=document.createElement('button');toggle.id='__mg-embed-toggle';toggle.type='button';document.body.appendChild(toggle);
+  items.forEach(function(c){
+    var card=document.createElement('div');card.className='__mg-embed-card'+(c.resolved?' __mg-resolved':'');card.setAttribute('data-for',c.id);
+    var head=document.createElement('div');head.className='__mg-embed-head';
+    var av=document.createElement('div');av.className='__mg-embed-av';av.textContent=(c.author||'Y').slice(0,1).toUpperCase();
+    var au=document.createElement('span');au.className='__mg-embed-author';au.textContent=c.author||'You';
+    var dt=document.createElement('span');dt.className='__mg-embed-date';dt.textContent=c.date||'';
+    head.appendChild(av);head.appendChild(au);head.appendChild(dt);
+    if(c.resolved){var b=document.createElement('span');b.className='__mg-embed-badge';b.textContent='Resolved';head.appendChild(b);}
+    var q=document.createElement('div');q.className='__mg-embed-quote';q.textContent=c.quote||'';
+    var body=document.createElement('div');body.className='__mg-embed-body'+(c.text?'':' __mg-empty');body.textContent=c.text||'(no note)';
+    card.appendChild(head);card.appendChild(q);card.appendChild(body);
+    card.addEventListener('click',function(){var el=findSpan(c.id);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});flash(el);}});
+    gutter.appendChild(card);cards[c.id]=card;
+  });
+  function layout(){
+    if(!shown)return;
+    var arr=items.map(function(c){var el=findSpan(c.id);return {id:c.id,top:el?el.getBoundingClientRect().top:-99999};}).sort(function(a,b){return a.top-b.top;});
+    var cursor=44;
+    arr.forEach(function(o){var card=cards[o.id];if(!card)return;var t=Math.max(o.top,cursor);card.style.top=t+'px';cursor=t+card.offsetHeight+10;});
+  }
+  var raf=0; function onScroll(){if(raf)return;raf=requestAnimationFrame(function(){raf=0;layout();});}
+  function setShown(v){shown=v;if(v){document.documentElement.style.marginRight=GW+'px';root.style.display='';toggle.textContent='Hide comments';layout();}else{document.documentElement.style.marginRight='';root.style.display='none';toggle.textContent='Show comments';}}
+  toggle.addEventListener('click',function(){setShown(!shown);});
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',onScroll);
+  document.addEventListener('click',function(e){var h=e.target.closest&&e.target.closest('[data-comment-id]');if(h){flash(h);}});
+  setShown(true);
+  setTimeout(layout,60);setTimeout(layout,300);
+  window.addEventListener('load',function(){setTimeout(layout,50);});
+})();`;
+
+  function htmlBuildEmbed() {
+    return '<style id="__mg-embed-style">' + MG_EMBED_STYLE + "</style>"
+      + '<script id="__mg-embed-runtime">' + MG_EMBED_RUNTIME + "<\/script>";
+  }
+
   function htmlDocOf() { return htmlFrame && htmlFrame.contentDocument; }
 
   function mgNewId() {
@@ -1169,6 +1242,10 @@
   // <section> from the live DOM (it's re-emitted fresh on the next save).
   function htmlRehydrate(doc) {
     const out = [];
+    // Strip any previously-embedded standalone component — kindmd drives the
+    // live gutter itself and re-emits the embed on save.
+    doc.querySelectorAll("#__mg-embed-style, #__mg-embed-runtime, #__mg-embed-root, #__mg-embed-toggle").forEach((n) => n.remove());
+    if (doc.documentElement) doc.documentElement.style.marginRight = "";
     const sec = doc.getElementById("__doc-comments");
     if (sec) {
       sec.querySelectorAll("li[data-for]").forEach((li) => {
@@ -1629,7 +1706,8 @@
     if (!doc) return state.currentRaw || "";
     doc.querySelectorAll('[contenteditable="true"]').forEach((el) => el.removeAttribute("contenteditable"));
     const clone = doc.documentElement.cloneNode(true);
-    clone.querySelectorAll("#__mg-chrome, #__doc-comments").forEach((n) => n.remove());
+    clone.querySelectorAll("#__mg-chrome, #__doc-comments, #__mg-embed-style, #__mg-embed-runtime, #__mg-embed-root, #__mg-embed-toggle").forEach((n) => n.remove());
+    clone.style.marginRight = "";
     clone.querySelectorAll("[contenteditable]").forEach((n) => n.removeAttribute("contenteditable"));
     clone.querySelectorAll(".__mg-active").forEach((n) => n.classList.remove("__mg-active"));
     // Unwrap any find-in-document search marks so they never reach the file.
@@ -1643,8 +1721,10 @@
     if (state.html.comments.length) {
       const body = clone.querySelector("body") || clone;
       const tmp = doc.createElement("div");
-      tmp.innerHTML = htmlBuildCommentsSection();
-      if (tmp.firstElementChild) body.appendChild(tmp.firstElementChild);
+      // Data section (readable + no-JS fallback) + the self-contained component
+      // that renders the interactive gutter in a plain browser.
+      tmp.innerHTML = htmlBuildCommentsSection() + htmlBuildEmbed();
+      while (tmp.firstChild) body.appendChild(tmp.firstChild);
     }
     return "<!DOCTYPE html>\n" + clone.outerHTML;
   }

@@ -45,7 +45,8 @@ Open an `.html` / `.htm` file and it renders like a browser inside a document ca
 - **Read / Edit** toggle in the toolbar (or `⌘E`)
 - **Edit in place** — in Edit mode, click any text block to edit it directly. Plain text only: rich-formatting shortcuts are blocked, paste is de-formatted, and `Enter` commits.
 - **Margin comments** — select any text and click the floating **💬 Comment** button. A highlight is dropped in the document and a note card appears in the gutter, pinned next to the selection. Resolve, reopen, or delete from the card.
-- **Saved into the file itself** — comments persist as `[data-comment-id]` highlight spans plus a `<section id="__doc-comments">` appended to the document, so annotations travel with the file and rehydrate when you reopen it. `⌘S` (or the **Save** button) writes straight back to disk.
+- **Saved into the file itself** — comments persist as `[data-comment-id]` highlight spans, a `<section id="__doc-comments">` data block, and a small **self-contained component** (inline CSS + JS). Open the saved file in *any* browser and the comment gutter renders with a Show/Hide toggle and pins aligned to each highlight — no kindmd required. kindmd strips the embedded component on open and re-emits it on save. `⌘S` (or the **Save** button) writes straight back to disk.
+- **Full-width** — the document fills the whole content area, with the comment gutter to its right (and edge-to-edge when comments are hidden).
 - **Show / hide comments** collapses the gutter to read the document full-width.
 - **Find in document** — `⌘F` searches inside the HTML; matches are highlighted, `Enter` / `Shift-Enter` step through them, `Esc` clears. Search marks never touch the saved file.
 - The page's own scripts are **not executed** (the document is rendered for reading and annotating, not running); its CSS renders fully.

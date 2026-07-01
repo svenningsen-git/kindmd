@@ -22,6 +22,12 @@
 ### Added — find-in-document search for HTML
 - The search box now works in HTML mode too: matches are highlighted inside the document, `Enter` / `Shift-Enter` step through them, `Esc` clears. Search marks never touch the saved file.
 
+### Added — portable, self-contained comments
+- Saving an annotated HTML file now embeds a small self-contained marginalia component (inline CSS + JS) alongside the highlight spans and comment data. **Open the saved file in any regular browser and the comment gutter renders with a Show/Hide toggle and pins aligned to each highlight** — no kindmd required. kindmd strips the embedded component on open and re-emits it on save, so editing round-trips cleanly.
+
+### Changed — full-width HTML rendering
+- The HTML document now fills the whole content area (with the comment gutter to its right when shown, and edge-to-edge when comments are hidden) instead of a narrow centered column.
+
 ## Unreleased
 
 ### Added — CSV / TSV reader mode

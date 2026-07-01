@@ -643,25 +643,25 @@ body.kindmd-html-active .kindmd-app-titlebar {
 .kindmd-html-pane[hidden] { display: none; }
 
 .kindmd-html-canvas {
-  max-width: calc(760px + 24px + var(--mg-gutter) + 48px);
-  margin: 0 auto;
+  /* Always fill the whole main area — the document card takes all the width
+     left of the comment gutter (and the full width when comments are hidden). */
+  max-width: none;
+  margin: 0;
   padding: 36px 24px 120px;
   display: flex;
   align-items: flex-start;
   gap: 24px;
 }
-.kindmd-html-pane.no-comments .kindmd-html-canvas { max-width: 868px; }
 
 .kindmd-html-page {
-  flex: none;
-  width: min(760px, calc(100% - (var(--mg-gutter) + 24px)));
+  flex: 1 1 auto;
+  min-width: 0;
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 12px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 30px rgba(0, 0, 0, 0.05);
   overflow: hidden;
 }
-.kindmd-html-pane.no-comments .kindmd-html-page { width: min(820px, 100%); }
 
 .kindmd-html-frame {
   display: block;
