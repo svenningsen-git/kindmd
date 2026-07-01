@@ -11,10 +11,16 @@
 - **Show / hide comments** collapses the gutter for full-width reading.
 - Adapted from the "Marginalia" Claude Design prototype; save-to-disk replaces the prototype's browser download, and the app's file tree replaces its single-file open.
 
-### Changed — unified white/black chrome
-- Sidebar (file navigation) is now white with black text and a black active row (previously warm paper + oxblood).
-- CSV renders on a white surface; HTML sits on a soft neutral stage so the document card reads as a page; the markdown reader keeps its warm paper palette and oxblood editorial accents.
-- The Marginalia UI is fully monochrome to match.
+### Changed — fully monochrome
+- Entire palette converted to neutral greyscale — no hue anywhere. The oxblood/gold/sage accents, warm paper/ink/rule tones, CSV filter tints, and even the code-block syntax theme (now differentiated by lightness + italic, not colour) are all monochrome.
+- Sidebar (file navigation) is white with black text and a black active row.
+- CSV renders on a white surface; HTML sits on a soft neutral stage so the document card reads as a page; the markdown reader is neutral paper.
+
+### Changed — unified Read/Edit control
+- Markdown now uses the same segmented **Read / Edit** control as HTML (shared styling); Export / Save-as and the HTML tools share one monochrome button language. CSV stays view-only.
+
+### Added — find-in-document search for HTML
+- The search box now works in HTML mode too: matches are highlighted inside the document, `Enter` / `Shift-Enter` step through them, `Esc` clears. Search marks never touch the saved file.
 
 ## Unreleased
 

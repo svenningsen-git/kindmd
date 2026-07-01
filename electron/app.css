@@ -46,9 +46,10 @@ body.kindmd-csv-active .kindmd-app-toc { display: none; }
 body.kindmd-html-active .kindmd-app { grid-template-columns: 260px 1fr; }
 body.kindmd-html-active .kindmd-app[data-sidebar-hidden="true"] { grid-template-columns: 0 1fr; }
 body.kindmd-html-active .kindmd-app-toc { display: none; }
-body.kindmd-html-active .kindmd-app-search { display: none; }
-body.kindmd-html-active .kindmd-edit-toggle { display: none; }
+body.kindmd-html-active .kindmd-md-seg { display: none; }
 body.kindmd-html-active .kindmd-app-tools { display: none; }
+/* CSV is view-only — hide the Read/Edit control there too. */
+body.kindmd-csv-active .kindmd-md-seg { display: none; }
 
 /* Reading surfaces per mode: markdown keeps warm paper; CSV is white; HTML sits
    on a soft neutral stage so the white document card reads as a page. Titlebars
@@ -352,7 +353,7 @@ body.kindmd-html-active .kindmd-app-titlebar {
   position: sticky;
   top: 0;
   z-index: 5;
-  background: rgba(245, 241, 232, 0.86);
+  background: rgba(244, 244, 244, 0.86);
   backdrop-filter: saturate(140%) blur(12px);
   -webkit-backdrop-filter: saturate(140%) blur(12px);
   border-bottom: 1px solid var(--rule);
@@ -388,47 +389,73 @@ body.kindmd-html-active .kindmd-app-titlebar {
 .kindmd-app-search { -webkit-app-region: no-drag; }
 .kindmd-app-search input { width: 200px; }
 
-.kindmd-edit-toggle {
+/* ---------- Shared toolbar controls (Read/Edit segmented + buttons) ----------
+   One monochrome control language across HTML, Markdown, and CSV modes. */
+
+.kindmd-seg {
   -webkit-app-region: no-drag;
   app-region: no-drag;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: #f0f0f0;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 9px;
+  padding: 3px;
+}
+.kindmd-seg[hidden] { display: none; }
+.kindmd-seg button {
+  height: 28px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: #666;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.kindmd-seg button.is-active {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+/* Unsaved-changes dot on the Edit segment. */
+.kindmd-seg-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+.kindmd-seg-dot[hidden] { display: none; }
+
+/* Ghost button — Export / Save-as / HTML tools share this base. */
+.kindmd-btn {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  border-radius: 9px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--ink-soft);
-  background: var(--paper-deep);
-  border: 1px solid var(--rule);
-  padding: 6px 12px;
-  border-radius: 999px;
-  cursor: pointer;
-  transition: color 0.12s ease, background 0.12s ease, border-color 0.12s ease;
-  line-height: 1;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
 }
-.kindmd-edit-toggle:hover:not(:disabled) {
-  color: var(--oxblood);
-  border-color: var(--oxblood);
-  background: var(--paper);
-}
-.kindmd-edit-toggle[aria-pressed="true"] {
-  color: var(--paper);
-  background: var(--oxblood);
-  border-color: var(--oxblood);
-}
-.kindmd-edit-toggle:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-.kindmd-edit-icon { font-size: 12px; }
-.kindmd-edit-dirty {
-  color: var(--gold);
-  font-size: 10px;
-  margin-left: -2px;
-}
-.kindmd-edit-toggle[aria-pressed="true"] .kindmd-edit-dirty { color: var(--gold-fill); }
+.kindmd-btn:hover { border-color: rgba(0, 0, 0, 0.4); }
 
 .kindmd-app-tools {
   display: flex;
@@ -493,7 +520,7 @@ body.kindmd-html-active .kindmd-app-titlebar {
   align-items: center;
   gap: 10px;
   padding: 7px 14px;
-  background: rgba(245, 241, 232, 0.92);
+  background: rgba(244, 244, 244, 0.92);
   border: 1px solid var(--rule);
   border-radius: 999px;
   box-shadow: 0 4px 14px rgba(0,0,0,0.07);
@@ -762,21 +789,6 @@ body.kindmd-html-active .kindmd-app-titlebar {
   display: flex; align-items: center; gap: 8px;
 }
 .kindmd-html-tools[hidden] { display: none; }
-
-.kindmd-html-seg {
-  display: flex; align-items: center; gap: 2px;
-  background: #f0f0f0; border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 9px; padding: 3px;
-}
-.kindmd-html-seg button {
-  height: 28px; padding: 0 14px; border: 0; border-radius: 7px;
-  font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
-  background: transparent; color: #666;
-  transition: background 0.12s ease, color 0.12s ease;
-}
-.kindmd-html-seg button.is-active {
-  background: #fff; color: var(--ink); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
-}
 
 .kindmd-html-comments {
   height: 34px; padding: 0 12px;

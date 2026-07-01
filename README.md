@@ -47,13 +47,14 @@ Open an `.html` / `.htm` file and it renders like a browser inside a document ca
 - **Margin comments** — select any text and click the floating **💬 Comment** button. A highlight is dropped in the document and a note card appears in the gutter, pinned next to the selection. Resolve, reopen, or delete from the card.
 - **Saved into the file itself** — comments persist as `[data-comment-id]` highlight spans plus a `<section id="__doc-comments">` appended to the document, so annotations travel with the file and rehydrate when you reopen it. `⌘S` (or the **Save** button) writes straight back to disk.
 - **Show / hide comments** collapses the gutter to read the document full-width.
+- **Find in document** — `⌘F` searches inside the HTML; matches are highlighted, `Enter` / `Shift-Enter` step through them, `Esc` clears. Search marks never touch the saved file.
 - The page's own scripts are **not executed** (the document is rendered for reading and annotating, not running); its CSS renders fully.
 
 ### Keyboard shortcuts
 
 - `⌘O` — Open Folder…
 - `⌘⇧O` — Open File…
-- `⌘F` / `⌘K` — Focus search (markdown: highlight matches · CSV: filter rows)
+- `⌘F` / `⌘K` — Focus search (markdown & HTML: highlight matches · CSV: filter rows)
 - `⌘E` — Toggle edit mode (markdown source · HTML in-place)
 - `⌘S` — Save (markdown edit mode · HTML any time)
 - `⌘\` — Toggle sidebar
@@ -77,10 +78,10 @@ kindmd --help                   # print usage
 
 ## What you get
 
-- Warm cream paper, oxblood accents, mono eyebrows
+- A restrained monochrome palette — neutral greyscale, no hue
 - Numbered H2 sections with rule separators
 - Auto-built TOC with active-section tracking (works in edit mode too)
-- Live search with gold highlighting (markdown) or row filtering (CSV)
+- Live search with grey highlighting (markdown & HTML) or row filtering (CSV)
 - GFM task lists rendered as bullets (kindmd never modifies the source)
 - Inline color swatches next to recognised color literals
 - Collapsible H2 sections

@@ -41,24 +41,23 @@
           <input id="kindmd-search-input" type="search" placeholder="Search (⌘F)" autocomplete="off" spellcheck="false" data-search-input>
           <span class="kindmd-search-count" aria-live="polite" data-search-count></span>
         </form>
-        <button class="kindmd-edit-toggle" type="button" data-edit-toggle aria-pressed="false" aria-label="Toggle edit mode" disabled>
-          <span class="kindmd-edit-icon" aria-hidden="true">✎</span>
-          <span class="kindmd-edit-label" data-edit-label>Edit</span>
-          <span class="kindmd-edit-dirty" data-edit-dirty aria-hidden="true" hidden>●</span>
-        </button>
+        <div class="kindmd-seg kindmd-md-seg" data-md-seg role="group" aria-label="Reading mode" hidden>
+          <button type="button" class="is-active" data-md-read>Read</button>
+          <button type="button" data-md-edit>Edit<span class="kindmd-seg-dot" data-edit-dirty aria-hidden="true" hidden></span></button>
+        </div>
         <div class="kindmd-app-tools">
-          <button class="kindmd-export" type="button" data-export aria-label="Export as HTML">Export</button>
+          <button class="kindmd-btn kindmd-export" type="button" data-export aria-label="Export as HTML">Export</button>
         </div>
         <div class="kindmd-html-tools" data-html-tools hidden>
-          <div class="kindmd-html-seg" role="group" aria-label="Reading mode">
+          <div class="kindmd-seg" role="group" aria-label="Reading mode">
             <button type="button" class="is-active" data-html-read>Read</button>
             <button type="button" data-html-edit>Edit</button>
           </div>
-          <button type="button" class="kindmd-html-comments is-on" data-html-comments aria-pressed="true">
+          <button type="button" class="kindmd-btn kindmd-html-comments is-on" data-html-comments aria-pressed="true">
             <span class="kindmd-html-comments-label" data-html-comments-label>Hide comments</span>
             <span class="kindmd-html-comments-count" data-html-comment-count hidden></span>
           </button>
-          <button type="button" class="kindmd-html-save" data-html-save>
+          <button type="button" class="kindmd-btn kindmd-html-save" data-html-save>
             Save<span class="kindmd-html-save-dirty" data-html-dirty aria-hidden="true" hidden></span>
           </button>
         </div>

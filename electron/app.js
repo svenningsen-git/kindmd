@@ -22,8 +22,9 @@
   const searchInput = $("[data-search-input]");
   const searchCount = $("[data-search-count]");
   const exportBtn = $("[data-export]");
-  const editToggleBtn = $("[data-edit-toggle]");
-  const editLabel = $("[data-edit-label]");
+  const mdSeg = $("[data-md-seg]");
+  const mdReadBtn = $("[data-md-read]");
+  const mdEditBtn = $("[data-md-edit]");
   const editDirtyDot = $("[data-edit-dirty]");
   const editPane = $("[data-edit-pane]");
   const editTextarea = $("[data-edit-textarea]");
@@ -477,7 +478,9 @@
     state.csv = null;
     state.dirty = false;
     setDirtyIndicator(false);
-    if (editToggleBtn) editToggleBtn.disabled = false;
+    if (mdSeg) mdSeg.hidden = false;
+    if (mdReadBtn) mdReadBtn.classList.add("is-active");
+    if (mdEditBtn) mdEditBtn.classList.remove("is-active");
     document.body.classList.remove("kindmd-csv-active");
     document.body.classList.remove("kindmd-html-active");
 
@@ -540,7 +543,7 @@
 
     document.body.classList.add("kindmd-csv-active");
     document.body.classList.remove("kindmd-html-active");
-    if (editToggleBtn) editToggleBtn.disabled = true; // no edit mode for CSV (v1)
+    if (mdSeg) mdSeg.hidden = true; // CSV is view-only — no Read/Edit control
 
     titleEl.textContent = doc.title;
     document.title = `${doc.title} — kindmd`;
@@ -1073,7 +1076,7 @@
     document.body.classList.add("kindmd-html-active");
     articleEl.hidden = true;
     editPane.hidden = true;
-    if (editToggleBtn) editToggleBtn.disabled = true;
+    if (mdSeg) mdSeg.hidden = true;
     if (htmlTools) htmlTools.hidden = false;
     htmlPane.hidden = false;
     htmlPane.classList.remove("no-comments");
@@ -1120,7 +1123,9 @@
       "body.__mg-edit :where(p,h1,h2,h3,h4,h5,h6,li,td,th,blockquote,figcaption,a,span,dt,dd):hover{outline:1.5px dashed rgba(0,0,0,.4);outline-offset:2px;border-radius:2px;cursor:text}" +
       '[contenteditable="true"]{outline:2px solid #1a1a1a !important;outline-offset:2px;background:rgba(0,0,0,.05);border-radius:2px}' +
       "[data-comment-id]{cursor:pointer;transition:background .12s}" +
-      "[data-comment-id].__mg-active{outline:1px solid rgba(0,0,0,.28)}";
+      "[data-comment-id].__mg-active{outline:1px solid rgba(0,0,0,.28)}" +
+      ".__mg-search{background:rgba(0,0,0,.12);border-radius:1px}" +
+      ".__mg-search.__mg-cur{background:rgba(0,0,0,.32);outline:2px solid #1a1a1a;outline-offset:1px}";
 
     const comments = htmlRehydrate(doc);
 
@@ -1200,7 +1205,13 @@
     htmlApplyEditClass();
     if (htmlReadBtn) htmlReadBtn.classList.toggle("is-active", !edit);
     if (htmlEditBtn) htmlEditBtn.classList.toggle("is-active", !!edit);
-    if (edit) hideSelBtn();
+    if (edit) {
+      hideSelBtn();
+      // Editing over search marks is messy — clear the find state on entry.
+      htmlClearSearch();
+      if (searchInput) searchInput.value = "";
+      updateSearchCount();
+    }
   }
   function htmlApplyEditClass() {
     const doc = htmlDocOf();
@@ -1383,6 +1394,87 @@
     if (htmlSaveBtn) htmlSaveBtn.classList.toggle("is-dirty", !!v);
   }
 
+  // ----- find in document (search inside the iframe) -----
+
+  function htmlClearSearch() {
+    const doc = htmlDocOf();
+    if (doc) {
+      doc.querySelectorAll(".__mg-search").forEach((m) => {
+        const p = m.parentNode;
+        if (!p) return;
+        while (m.firstChild) p.insertBefore(m.firstChild, m);
+        p.removeChild(m);
+        p.normalize();
+      });
+    }
+    state.searchMatches = [];
+    state.searchIndex = -1;
+  }
+
+  function runSearchInHtml(query) {
+    const doc = htmlDocOf();
+    htmlClearSearch();
+    if (!doc || !doc.body || !query || query.length < 2) { updateSearchCount(); return; }
+    const q = query.toLowerCase();
+    const marks = [];
+    const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        let p = node.parentNode;
+        while (p && p !== doc.body) {
+          if (p.tagName === "SCRIPT" || p.tagName === "STYLE") return NodeFilter.FILTER_REJECT;
+          if (p.classList && p.classList.contains("__mg-search")) return NodeFilter.FILTER_REJECT;
+          p = p.parentNode;
+        }
+        return node.nodeValue.toLowerCase().includes(q) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      },
+    });
+    const textNodes = [];
+    let n;
+    while ((n = walker.nextNode())) textNodes.push(n);
+    for (const node of textNodes) {
+      const text = node.nodeValue;
+      const lower = text.toLowerCase();
+      let from = 0, idx;
+      const frag = doc.createDocumentFragment();
+      const local = [];
+      while ((idx = lower.indexOf(q, from)) !== -1) {
+        if (idx > from) frag.appendChild(doc.createTextNode(text.slice(from, idx)));
+        const mark = doc.createElement("span");
+        mark.className = "__mg-search";
+        mark.textContent = text.slice(idx, idx + q.length);
+        frag.appendChild(mark);
+        local.push(mark);
+        from = idx + q.length;
+      }
+      if (from < text.length) frag.appendChild(doc.createTextNode(text.slice(from)));
+      node.parentNode.replaceChild(frag, node);
+      marks.push(...local);
+    }
+    state.searchMatches = marks;
+    state.searchIndex = marks.length ? 0 : -1;
+    updateSearchCount();
+    if (marks.length) focusMatchInHtml(0);
+  }
+
+  function focusMatchInHtml(idx) {
+    const marks = state.searchMatches;
+    if (!marks.length) return;
+    marks.forEach((m, i) => { if (m && m.classList) m.classList.toggle("__mg-cur", i === idx); });
+    state.searchIndex = idx;
+    const mark = marks[idx];
+    const mainEl = document.querySelector(".kindmd-app-main");
+    if (mark && mainEl) {
+      const mainRect = mainEl.getBoundingClientRect();
+      const r = mark.getBoundingClientRect();
+      mainEl.scrollTo({
+        top: Math.max(0, mainEl.scrollTop + (r.top - mainRect.top) - 160),
+        behavior: prefersReducedMotion() ? "auto" : "smooth",
+      });
+    }
+    updateSearchCount();
+  }
+
   // ----- gutter cards -----
 
   function htmlRenderGutter() {
@@ -1540,6 +1632,12 @@
     clone.querySelectorAll("#__mg-chrome, #__doc-comments").forEach((n) => n.remove());
     clone.querySelectorAll("[contenteditable]").forEach((n) => n.removeAttribute("contenteditable"));
     clone.querySelectorAll(".__mg-active").forEach((n) => n.classList.remove("__mg-active"));
+    // Unwrap any find-in-document search marks so they never reach the file.
+    clone.querySelectorAll(".__mg-search").forEach((n) => {
+      const p = n.parentNode; if (!p) return;
+      while (n.firstChild) p.insertBefore(n.firstChild, n);
+      p.removeChild(n);
+    });
     // Tidy up empty attributes our chrome may have left behind (e.g. class="").
     clone.querySelectorAll('[class=""]').forEach((n) => n.removeAttribute("class"));
     if (state.html.comments.length) {
@@ -1576,6 +1674,9 @@
       doc.removeEventListener("mouseup", htmlDocMouseUp);
     }
     hideSelBtn();
+    state.searchMatches = []; state.searchIndex = -1;
+    if (searchInput) searchInput.value = "";
+    if (searchCount) { searchCount.textContent = ""; searchCount.classList.remove("is-empty"); }
     if (htmlGutter) htmlGutter.querySelectorAll("[data-card-id]").forEach((n) => n.remove());
     if (htmlFrame) { htmlFrame.onload = null; htmlFrame.removeAttribute("srcdoc"); }
     if (htmlTools) htmlTools.hidden = true;
@@ -1697,10 +1798,8 @@
     editTextarea.value = state.currentRaw || "";
     state.dirty = false;
     setDirtyIndicator(false);
-    if (editToggleBtn) {
-      editToggleBtn.setAttribute("aria-pressed", "true");
-      editLabel.textContent = "Read";
-    }
+    if (mdEditBtn) mdEditBtn.classList.add("is-active");
+    if (mdReadBtn) mdReadBtn.classList.remove("is-active");
     updateActionButton();
     // Pause file watcher while editing so we don't fight the user mid-keystroke.
     kindmd.unwatchFile();
@@ -1736,10 +1835,8 @@
     editPane.hidden = true;
     articleEl.hidden = false;
     if (editHints) editHints.hidden = true;
-    if (editToggleBtn) {
-      editToggleBtn.setAttribute("aria-pressed", "false");
-      editLabel.textContent = "Edit";
-    }
+    if (mdReadBtn) mdReadBtn.classList.add("is-active");
+    if (mdEditBtn) mdEditBtn.classList.remove("is-active");
     updateActionButton();
     // Drop any edit-mode match state — it's textarea ranges, not DOM marks.
     state.searchMatches = [];
@@ -1793,12 +1890,8 @@
     editDirtyDot.hidden = !isDirty;
   }
 
-  if (editToggleBtn) {
-    editToggleBtn.addEventListener("click", () => {
-      if (state.editMode) exitEditMode();
-      else enterEditMode();
-    });
-  }
+  if (mdReadBtn) mdReadBtn.addEventListener("click", () => { if (state.editMode) exitEditMode(); });
+  if (mdEditBtn) mdEditBtn.addEventListener("click", () => { if (!state.editMode) enterEditMode(); });
 
   if (editTextarea) {
     editTextarea.addEventListener("input", () => {
@@ -2089,8 +2182,8 @@
   }
 
   function runSearch(query) {
-    // Search must work in both modes — dispatch by current view.
-    if (state.currentFileKind === "html") return; // in-iframe search not supported
+    // Search must work in every mode — dispatch by current view.
+    if (state.currentFileKind === "html") return runSearchInHtml(query);
     if (state.editMode) return runSearchInEditor(query);
     if (state.currentFileKind === "csv") return runSearchInCsv(query);
     clearSearchHighlights();
@@ -2161,6 +2254,7 @@
 
   function focusMatch(idx) {
     if (!state.searchMatches.length) return;
+    if (state.currentFileKind === "html") return focusMatchInHtml(idx);
     if (state.editMode) return focusMatchInEditor(idx);
     state.searchMatches.forEach((m, i) => {
       if (m && m.classList) m.classList.toggle("is-current", i === idx);
@@ -2269,6 +2363,9 @@
       searchInput.value = "";
       if (state.currentFileKind === "csv") {
         runSearchInCsv("");
+      } else if (state.currentFileKind === "html") {
+        htmlClearSearch();
+        updateSearchCount();
       } else {
         clearSearchHighlights();
         updateSearchCount();

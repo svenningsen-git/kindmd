@@ -139,7 +139,7 @@ function createWindow() {
     title: "kindmd",
     titleBarStyle: "hiddenInset",
     trafficLightPosition: { x: 16, y: 18 },
-    backgroundColor: "#F5F1E8",
+    backgroundColor: "#F4F4F4",
     vibrancy: "sidebar",
     visualEffectState: "active",
     show: false,
